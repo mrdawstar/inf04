@@ -1,0 +1,355 @@
+<Why>
+Pętla każe komputerowi powtarzać czynność: wypełnić tablicę 50 losowymi liczbami, rzucić 5 kostkami, pytać o dane, dopóki są błędne. **Każdy algorytm z egzaminu to pętla.** Jeśli opanujesz tę lekcję, dział 2 będzie o połowę łatwiejszy.
+</Why>
+
+## Teoria krok po kroku
+
+### 1. Pętla for: znam liczbę powtórzeń
+
+<Analogy>
+Trener mówi: „zrób 10 pompek”. Liczysz: jeden, dwa, trzy… aż do dziesięciu. Masz **licznik** (zaczyna od 1), **warunek** (dopóki nie przekroczysz 10) i **krok** (po każdej pompce +1). To dokładnie trzy części pętli `for`.
+</Analogy>
+
+```java check="body"
+for (int i = 1; i <= 10; i++) {    // start; warunek; krok
+    System.out.println("Pompka " + i);
+}
+```
+
+Kolejność działania:
+1. **start** `int i = 1` wykonuje się raz, na początku,
+2. sprawdzany jest **warunek** `i <= 10`: jeśli fałszywy, pętla się kończy,
+3. wykonuje się **ciało** pętli (to w klamrach),
+4. wykonuje się **krok** `i++` i wracamy do punktu 2.
+
+Można liczyć w dół (`i--`), co dwa (`i += 2`), od zera (`i = 0; i < n`). Ta ostatnia forma jest najczęstsza przy tablicach.
+
+### 2. Pętla while: dopóki coś jest prawdą
+
+```java check="body" expect="4"
+int n = 4729;
+int liczbaCyfr = 0;
+while (n > 0) {         // nie wiem z góry, ile razy: zależy od liczby
+    n = n / 10;         // odcinam ostatnią cyfrę
+    liczbaCyfr++;
+}
+System.out.println(liczbaCyfr);      // 4
+```
+
+<Analogy>
+„Dopóki w garnku jest zupa, nalewaj talerz”. Nie wiesz, ile będzie talerzy. Wiesz tylko, kiedy przestać.
+</Analogy>
+
+Jeśli warunek od początku jest fałszywy, `while` nie wykona się **ani razu**.
+
+### 3. Pętla do-while: najpierw zrób, potem sprawdź
+
+```java check="body" stdin="15\n2\n5"
+Scanner sc = new Scanner(System.in);
+int liczbaKostek;
+do {
+    System.out.print("Podaj liczbę kostek (3-10): ");
+    liczbaKostek = sc.nextInt();
+} while (liczbaKostek < 3 || liczbaKostek > 10);   // powtarzaj, DOPÓKI dane są ZŁE
+System.out.println("OK, rzucam " + liczbaKostek + " kostkami.");
+```
+
+Ciało wykona się **co najmniej raz**. Idealne do pytania użytkownika: najpierw trzeba zapytać, dopiero potem jest co sprawdzać. Dokładnie tego wymagał arkusz z czerwca 2024.
+
+Zmienną `liczbaKostek` deklarujesz **przed** pętlą, bo jest potrzebna w warunku `while` i po pętli.
+
+### 4. break i continue
+
+- `break`: natychmiast **wychodzi** z pętli. Np. „znalazłem szukaną liczbę, nie ma sensu szukać dalej”.
+- `continue`: **pomija resztę** bieżącego przebiegu i przechodzi do następnego. Np. „to liczba nieparzysta, pomiń ją”.
+
+### 5. Pętle zagnieżdżone
+
+Pętla w pętli. Wewnętrzna wykonuje się **w całości** przy każdym przebiegu zewnętrznej.
+
+<Analogy>
+Zegar. Wskazówka minutowa (pętla zewnętrzna) przesuwa się o jedną kreskę dopiero wtedy, gdy sekundowa (pętla wewnętrzna) zrobi pełne 60 kroków.
+</Analogy>
+
+Tak działają tabliczki mnożenia, rysowanie figur z gwiazdek i **wszystkie sortowania** (bąbelkowe, przez wybieranie, przez wstawianie).
+
+## Wizualizacja
+
+<Trace
+  title="Suma liczb od 1 do 4"
+  code={`int suma = 0;
+for (int i = 1; i <= 4; i++) {
+    suma += i;
+}
+System.out.println(suma);`}
+  steps={[
+    { line: 1, vars: { suma: 0 }, note: 'Akumulator startuje od zera.' },
+    { line: 2, vars: { suma: 0, i: 1 }, note: 'Start: i = 1. Warunek 1 <= 4 jest prawdziwy, wchodzimy.' },
+    { line: 3, vars: { suma: 1, i: 1 }, note: 'suma = 0 + 1' },
+    { line: 2, vars: { suma: 1, i: 2 }, note: 'Krok i++ daje 2. Warunek 2 <= 4: prawda.' },
+    { line: 3, vars: { suma: 3, i: 2 }, note: 'suma = 1 + 2' },
+    { line: 2, vars: { suma: 3, i: 3 }, note: 'i = 3, 3 <= 4: prawda.' },
+    { line: 3, vars: { suma: 6, i: 3 }, note: 'suma = 3 + 3' },
+    { line: 2, vars: { suma: 6, i: 4 }, note: 'i = 4, 4 <= 4: prawda.' },
+    { line: 3, vars: { suma: 10, i: 4 }, note: 'suma = 6 + 4' },
+    { line: 2, vars: { suma: 10, i: 5 }, note: 'i = 5, 5 <= 4: FAŁSZ. Pętla się kończy.' },
+    { line: 5, vars: { suma: 10 }, out: '10\n', note: 'Zmienna i już nie istnieje: żyła tylko w pętli. Została suma.' },
+  ]}
+/>
+
+## Przykład kodu
+
+Wzorzec z arkuszy: program działa w kółko, dopóki użytkownik nie odpowie „n”.
+
+```java title="Main.java" stdin="4\nt\n7\nn"
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String odpowiedz;
+
+        do {                                                   // gra wykona się co najmniej raz
+            System.out.print("Podaj liczbę: ");
+            int liczba = sc.nextInt();
+
+            int suma = 0;
+            for (int i = 1; i <= liczba; i++) {                // pętla for wewnątrz do-while
+                suma += i;
+            }
+            System.out.println("Suma od 1 do " + liczba + " = " + suma);
+
+            System.out.print("Jeszcze raz? (t/n): ");
+            odpowiedz = sc.next();
+        } while (odpowiedz.equals("t"));                       // napisy: equals!
+
+        System.out.println("Koniec programu.");
+    }
+}
+```
+
+## Najczęstsze błędy
+
+<Mistake title="Pętla nieskończona">
+`while (n > 0) { System.out.println(n); }` bez zmiany `n` w środku nigdy się nie skończy. W każdej pętli `while` sprawdź: **co w ciele pętli przybliża ją do końca?** Program się zawiesił? W IntelliJ zatrzymasz go czerwonym kwadratem (`Ctrl+F2`).
+</Mistake>
+
+<Mistake title="Pomyłka o jeden (off-by-one)">
+`for (int i = 1; i < 10; i++)` wykona się 9 razy, nie 10. `for (int i = 0; i <= n; i++)` wykona się n + 1 razy. Zanim uruchomisz program, policz na palcach pierwszy i ostatni przebieg.
+</Mistake>
+
+<Mistake title="Średnik po nawiasie pętli">
+
+```java check="body" expect="Wypisuję: 5"
+int i;
+for (i = 0; i < 5; i++);
+{
+    System.out.println("Wypisuję: " + i);   // wykona się RAZ, po pętli
+}
+```
+
+Średnik to „pusta instrukcja”, więc pętla kręci się pięć razy, nic nie robiąc. Blok pod spodem wykona się raz.
+</Mistake>
+
+<Mistake title="Zmienna z pętli użyta po pętli">
+
+```java check="error"
+for (int i = 0; i < 3; i++) {
+    System.out.println(i);
+}
+System.out.println(i);
+```
+
+`cannot find symbol: i`. Zmienna zadeklarowana w nawiasie `for` istnieje tylko w pętli. Jeśli potrzebujesz jej później, zadeklaruj ją przed pętlą.
+</Mistake>
+
+<Mistake title="Odwrócony warunek w do-while">
+Warunek w `while (...)` mówi, **kiedy powtarzać**, a nie kiedy skończyć. „Pytaj, dopóki liczba jest ZŁA”: `while (n < 3 || n > 10)`.
+</Mistake>
+
+## Trik na zapamiętanie
+
+<Trick title="Trzy pytania przed napisaniem pętli">
+1. **Czy wiem, ile razy?** Tak → `for`. Nie → `while`.
+2. **Czy musi się wykonać co najmniej raz?** (np. pytanie użytkownika) → `do-while`.
+3. **Co jest moim akumulatorem?** Suma zaczyna od `0`, iloczyn od `1`, licznik od `0`, maksimum od pierwszego elementu.
+
+Wzorzec **akumulatora**, który wraca w co trzecim zadaniu:
+
+```java check="body"
+int n = 10;
+int suma = 0;                         // 1. przygotuj pojemnik
+for (int i = 1; i <= n; i++) {        // 2. przejdź po wszystkich
+    suma += i;                        // 3. dorzuć bieżący element
+}                                     // 4. po pętli pojemnik ma wynik
+```
+</Trick>
+
+## Zadania
+
+<Task id="j1-6-1" title="Odliczanie" level="łatwe" minutes={5}>
+Wypisz liczby od 10 do 1 w jednej linii oddzielone spacjami, a w następnej linii `Start!`.
+
+<Hint>Pętla `for` może liczyć w dół: start 10, warunek `i >= 1`, krok `i--`.</Hint>
+<Hint>`print` z dopisaną spacją w pętli, a po pętli `println()` albo od razu `println("\nStart!")`.</Hint>
+<Solution>
+
+```java check="body" expect="10 9 8 7 6 5 4 3 2 1 \nStart!"
+for (int i = 10; i >= 1; i--) {
+    System.out.print(i + " ");
+}
+System.out.println();            // przejście do nowej linii po wypisaniu wszystkich
+System.out.println("Start!");
+```
+</Solution>
+</Task>
+
+<Task id="j1-6-2" title="Średnia z n liczb" level="średnie" minutes={15}>
+Zapytaj, ile liczb użytkownik chce podać. Wczytaj je w pętli, a na końcu wypisz sumę, średnią (2 miejsca po przecinku) i największą z nich.
+
+<Hint>Liczbę powtórzeń znasz po pierwszym pytaniu, więc `for (int i = 1; i <= ile; i++)`.</Hint>
+<Hint>Suma to akumulator od 0. Do maksimum: pierwszą liczbę możesz potraktować specjalnie (`i == 1`) albo zacząć od `Integer.MIN_VALUE`.</Hint>
+<Hint>Średnia: `(double) suma / ile`.</Hint>
+<Solution>
+
+```java title="Main.java" stdin="4\n3\n8\n5\n2" expect="Suma: 18"
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Ile liczb podasz? ");
+        int ile = sc.nextInt();
+
+        int suma = 0;
+        int najwieksza = Integer.MIN_VALUE;     // najmniejszy możliwy int: każda liczba będzie większa
+        for (int i = 1; i <= ile; i++) {
+            System.out.print("Liczba " + i + ": ");
+            int liczba = sc.nextInt();
+            suma += liczba;
+            if (liczba > najwieksza) {
+                najwieksza = liczba;
+            }
+        }
+
+        System.out.println("Suma: " + suma);
+        System.out.printf("Średnia: %.2f%n", (double) suma / ile);
+        System.out.println("Największa: " + najwieksza);
+    }
+}
+```
+
+**Dlaczego tak:** `Integer.MIN_VALUE` to −2147483648. Pierwsza wczytana liczba na pewno będzie od niego większa i od razu zostanie maksimum.
+</Solution>
+</Task>
+
+<Task id="j1-6-3" title="Liczba kostek jak w arkuszu" level="egzamin" minutes={15}>
+Program pyta o liczbę kostek z przedziału 3–10. Jeśli liczba jest spoza przedziału, wypisuje komunikat o błędzie i **pyta ponownie**, aż do skutku. Na końcu wypisuje kolejne numery kostek: `Kostka 1`, `Kostka 2`, … (po jednej w linii).
+
+<Hint>„Pytaj, aż dane będą dobre” to `do { ... } while (dane złe);`.</Hint>
+<Hint>Komunikat o błędzie wypisz wewnątrz pętli, ale tylko gdy liczba jest zła: `if (n < 3 || n > 10)`.</Hint>
+<Hint>Po pętli `do-while` zwykła pętla `for` od 1 do liczby kostek.</Hint>
+<Solution>
+
+```java title="Main.java" stdin="2\n11\n4" expect="Kostka 4"
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int liczbaKostek;
+
+        do {
+            System.out.print("Ile kostek chcesz rzucić (3-10)? ");
+            liczbaKostek = sc.nextInt();
+            if (liczbaKostek < 3 || liczbaKostek > 10) {
+                System.out.println("Błąd: liczba kostek musi być z przedziału 3-10.");
+            }
+        } while (liczbaKostek < 3 || liczbaKostek > 10);
+
+        for (int numer = 1; numer <= liczbaKostek; numer++) {
+            System.out.println("Kostka " + numer);
+        }
+    }
+}
+```
+
+**Dlaczego tak:** komunikat o błędzie to zrozumiała komunikacja z użytkownikiem (R.1.7). Za to, że program cicho pyta ponownie, egzaminator może nie dać punktu.
+</Solution>
+</Task>
+
+<Task id="j1-6-4" title="Odwróć liczbę" level="średnie" minutes={15}>
+Wczytaj liczbę naturalną (np. 1234) i wypisz ją odwróconą (4321) oraz sumę jej cyfr (10). Bez zamiany na tekst: tylko `%`, `/` i pętla.
+
+<Hint>Nie wiesz, ile liczba ma cyfr, więc `while (n > 0)`.</Hint>
+<Hint>W każdym obrocie: `cyfra = n % 10;` potem `n = n / 10;`.</Hint>
+<Hint>Budowanie odwróconej: `odwrocona = odwrocona * 10 + cyfra;` (przesuwasz dotychczasowe cyfry w lewo i dopisujesz nową na końcu).</Hint>
+<Solution>
+
+```java title="Main.java" stdin="1234" expect="Odwrócona: 4321\nSuma cyfr: 10"
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Podaj liczbę naturalną: ");
+        int n = sc.nextInt();
+
+        int odwrocona = 0;
+        int sumaCyfr = 0;
+        while (n > 0) {
+            int cyfra = n % 10;                    // ostatnia cyfra
+            odwrocona = odwrocona * 10 + cyfra;    // dopisz ją na końcu wyniku
+            sumaCyfr += cyfra;
+            n = n / 10;                            // odetnij ją
+        }
+        System.out.println("Odwrócona: " + odwrocona);
+        System.out.println("Suma cyfr: " + sumaCyfr);
+    }
+}
+```
+
+**Dlaczego tak:** 0·10+4 = 4, potem 4·10+3 = 43, potem 432, potem 4321. Ten sam wzorzec (`wynik * podstawa + cyfra`) to schemat Hornera do zamiany systemów liczbowych (lekcja 2.17).
+</Solution>
+</Task>
+
+<Task id="j1-6-5" title="Choinka" level="średnie" minutes={15}>
+Wczytaj wysokość `h` i narysuj choinkę z gwiazdek. Dla h = 4:
+
+```text
+   *
+  ***
+ *****
+*******
+```
+
+<Hint>W wierszu numer `w` (od 1 do h) są spacje i gwiazdki. Policz je dla h = 4 i znajdź wzór.</Hint>
+<Hint>Spacji jest `h - w`, gwiazdek `2 * w - 1`.</Hint>
+<Hint>Zewnętrzna pętla po wierszach, w środku dwie osobne pętle: najpierw spacje, potem gwiazdki. Na końcu wiersza `println()`.</Hint>
+<Solution>
+
+```java title="Main.java" stdin="4" expect="   *\n  ***\n *****\n*******"
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Wysokość: ");
+        int h = sc.nextInt();
+
+        for (int wiersz = 1; wiersz <= h; wiersz++) {
+            for (int s = 1; s <= h - wiersz; s++) {          // spacje: coraz mniej
+                System.out.print(" ");
+            }
+            for (int g = 1; g <= 2 * wiersz - 1; g++) {      // gwiazdki: 1, 3, 5, 7...
+                System.out.print("*");
+            }
+            System.out.println();                            // koniec wiersza
+        }
+    }
+}
+```
+
+**Dlaczego tak:** zawsze rozpisz 2–3 pierwsze wiersze w tabelce (wiersz, spacje, gwiazdki). Wzór sam się pokaże.
+</Solution>
+</Task>

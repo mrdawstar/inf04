@@ -1,0 +1,258 @@
+<Why>
+Program musi gdzieś trzymać dane: wiek, cenę, wynik rzutu kostką. Robi to w zmiennych. Na egzaminie kryterium R.1.5 sprawdza, czy **typ zmiennej pasuje do danych**, a R.1.4, czy jej **nazwa coś mówi**. Dwa łatwe punkty, jeśli wiesz, jak to robić.
+</Why>
+
+## Teoria krok po kroku
+
+### 1. Zmienna to pudełko z etykietą
+
+<Analogy>
+Wyobraź sobie szafkę w szatni. Na drzwiczkach jest **etykieta** (nazwa zmiennej), w środku leży **jedna rzecz** (wartość), a szafka ma określony **rozmiar** (typ). Do szafki na buty nie wsadzisz parasola. Tak samo do zmiennej typu `int` nie włożysz tekstu.
+</Analogy>
+
+```java check="body"
+int wiek;            // deklaracja: tworzę pudełko „wiek” na liczby całkowite
+wiek = 17;           // przypisanie: wkładam do niego 17
+int rok = 2027;      // deklaracja i przypisanie naraz (inicjalizacja)
+wiek = wiek + 1;     // biorę starą wartość, dodaję 1, wkładam z powrotem: teraz 18
+```
+
+Znak `=` w Javie **nie znaczy „równa się”**. Znaczy „włóż to, co po prawej, do pudełka po lewej”. Dlatego `wiek = wiek + 1` ma sens.
+
+### 2. Typy, których naprawdę użyjesz
+
+| Typ | Co trzyma | Przykład | Kiedy na egzaminie |
+|---|---|---|---|
+| `int` | liczby całkowite (do ok. ±2,1 mld) | `int oczka = 6;` | liczniki, indeksy, wyniki rzutów |
+| `double` | liczby z ułamkiem | `double cena = 4.40;` | średnie, ceny, procenty |
+| `boolean` | `true` albo `false` | `boolean dostepna = true;` | flagi: czy znaleziono, czy kość aktywna |
+| `char` | jeden znak, w apostrofach | `char plec = 'K';` | litery w szyfrach, cyfry PESEL |
+| `String` | tekst, w cudzysłowach | `String imie = "Ola";` | imiona, komunikaty, nazwy plików |
+| `long` | bardzo duże liczby całkowite | `long silnia = 6227020800L;` | silnia, duże sumy |
+
+Istnieją też `byte`, `short` i `float`. Na praktyce prawie się ich nie używa, ale w teście padają pytania o zakresy (np. `byte` to −128…127).
+
+`String` piszemy wielką literą, bo to nie typ prosty, tylko **klasa**. Więcej o tym w lekcji 1.9.
+
+### 3. Nazwy zmiennych
+
+- Zasada **camelCase**: `liczbaOcen`, `sumaPunktow`, `czyZnaleziono`.
+- Nazwa mówi, **co jest w środku**. Egzaminator nie zaliczy `x`, `a1`, `tab`, `foo`. Wyjątki: `i`, `j` w pętlach i `tmp` przy zamianie.
+- Bez polskich znaków (technicznie działają, ale to proszenie się o kłopoty z kodowaniem), bez spacji, nie zaczynamy od cyfry.
+
+### 4. Stałe
+
+Wartość, która nie może się zmienić, oznaczasz słowem `final`:
+
+```java check="body"
+final int LICZBA_KOSCI = 5;      // stała: nazwa WIELKIMI_LITERAMI
+final double CENA_BILETU = 4.40;
+// LICZBA_KOSCI = 6;             // błąd kompilacji: nie można zmienić stałej
+```
+
+### 5. Rzutowanie, czyli zmiana typu
+
+- **Niejawne** (samo się dzieje): z „mniejszego” do „większego” typu. `double d = 5;` daje `5.0`.
+- **Jawne** (musisz napisać): z „większego” do „mniejszego”. `int n = (int) 7.9;` daje `7`. Część ułamkowa jest **obcinana, nie zaokrąglana**.
+
+### 6. Pułapka dzielenia całkowitego
+
+Jeśli **obie** liczby są typu `int`, wynik też jest `int`, a reszta przepada:
+
+```java check="body" expect="3\n3.0\n3.5\n3.5"
+System.out.println(7 / 2);              // 3
+double zle = 7 / 2;                     // najpierw 3, dopiero potem zamiana na 3.0
+System.out.println(zle);                // 3.0
+System.out.println(7 / 2.0);            // 3.5: wystarczy, że jedna liczba jest double
+int suma = 7, ile = 2;
+System.out.println((double) suma / ile); // 3.5: rzutowanie PRZED dzieleniem
+```
+
+<ExamTip>
+Prawie każdy arkusz ma coś ze średnią. Pisz `(double) suma / ilosc`. Bez rzutowania średnia z ocen 4 i 5 wyjdzie 4.0 zamiast 4.5 i stracisz punkt za poprawność.
+</ExamTip>
+
+## Wizualizacja
+
+Zamiana wartości dwóch zmiennych to podstawa sortowania. Nie da się tego zrobić bez trzeciego, pomocniczego pudełka. Prześledź krok po kroku:
+
+<Trace
+  title="Zamiana a i b przez tmp"
+  code={`int a = 5;
+int b = 9;
+int tmp = a;
+a = b;
+b = tmp;
+System.out.println(a + " " + b);`}
+  steps={[
+    { line: 1, vars: { a: 5 }, note: 'Tworzymy pudełko a i wkładamy 5.' },
+    { line: 2, vars: { a: 5, b: 9 }, note: 'Tworzymy pudełko b i wkładamy 9.' },
+    { line: 3, vars: { a: 5, b: 9, tmp: 5 }, note: 'Kopia a trafia do tmp. Gdybyśmy od razu zrobili a = b, piątka zniknęłaby na zawsze.' },
+    { line: 4, vars: { a: 9, b: 9, tmp: 5 }, note: 'a dostaje wartość b. Stara piątka przetrwała w tmp.' },
+    { line: 5, vars: { a: 9, b: 5, tmp: 5 }, note: 'b dostaje uratowaną piątkę z tmp.' },
+    { line: 6, vars: { a: 9, b: 5, tmp: 5 }, out: '9 5\n', note: 'Wartości zamienione.' },
+  ]}
+/>
+
+<Analogy>
+Masz kawę w kubku A i herbatę w kubku B i chcesz je zamienić. Bez trzeciego, pustego kubka się nie da. `tmp` to właśnie ten trzeci kubek.
+</Analogy>
+
+## Przykład kodu
+
+```java title="Main.java" expect="Średnia: 4.5"
+public class Main {
+    public static void main(String[] args) {
+        final int LICZBA_PRZEDMIOTOW = 2;       // stała: nie zmieni się w trakcie programu
+
+        String imie = "Dawid";                  // tekst: cudzysłów
+        char inicjal = 'D';                     // jeden znak: apostrofy
+        int ocenaMatematyka = 4;                // liczba całkowita
+        int ocenaInformatyka = 5;
+        boolean czyZdal = true;                 // tak/nie
+
+        int suma = ocenaMatematyka + ocenaInformatyka;            // 9
+        double srednia = (double) suma / LICZBA_PRZEDMIOTOW;      // 4.5: rzutowanie przed dzieleniem
+
+        System.out.println(imie + " (" + inicjal + ")");          // Dawid (D)
+        System.out.println("Średnia: " + srednia);                // Średnia: 4.5
+        System.out.println("Zdał: " + czyZdal);                   // Zdał: true
+    }
+}
+```
+
+## Najczęstsze błędy
+
+<Mistake title="Użycie zmiennej, do której nic nie włożono">
+
+```java check="error"
+int licznik;
+licznik = licznik + 1;
+```
+
+`variable licznik might not have been initialized`. Zmienna lokalna nie ma wartości domyślnej. Zawsze zaczynaj od `int licznik = 0;`.
+</Mistake>
+
+<Mistake title="Ułamek w zmiennej int">
+
+```java check="error"
+int cena = 4.40;
+```
+
+`incompatible types: possible lossy conversion from double to int`. Java nie wyrzuci po cichu części ułamkowej. Albo zmień typ na `double`, albo rzutuj świadomie: `(int) 4.40`.
+</Mistake>
+
+<Mistake title="Średnia liczona na intach">
+`double sr = suma / ilosc;` przy dwóch intach daje wynik bez części ułamkowej. Poprawnie: `double sr = (double) suma / ilosc;`.
+</Mistake>
+
+<Mistake title="Przepełnienie int">
+
+```java check="body" expect="-2147483648"
+int duza = 2147483647;          // największy int
+duza = duza + 1;
+System.out.println(duza);       // -2147483648: licznik „przekręcił się” jak w starym liczniku kilometrów
+```
+
+Silnia z 13 nie mieści się już w `int`. Do dużych wyników używaj `long`.
+</Mistake>
+
+## Trik na zapamiętanie
+
+<Trick title="Jaki typ wybrać? Zadaj pytanie">
+- „**Ile sztuk?**” → `int`
+- „**Ile kosztuje / jaka średnia?**” → `double`
+- „**Czy...?**” → `boolean` (i nazwa zaczynająca się od `czy`: `czyParzysta`, `czyDostepna`)
+- „**Jaka litera?**” → `char` w apostrofach `'a'`
+- „**Jaki tekst?**” → `String` w cudzysłowach `"abc"`
+
+Do tego zasada dzielenia: **„int przez int obcina”**. Powtórz ją sobie trzy razy.
+</Trick>
+
+## Zadania
+
+<Task id="j1-2-1" title="Moje dane w zmiennych" level="łatwe" minutes={10}>
+Utwórz zmienne z dobrze dobranymi typami i nazwami: imię, wiek, wzrost w metrach, czy masz prawo jazdy, pierwsza litera nazwiska. Wypisz je w jednym zdaniu, np. `Dawid, 18 lat, 1.82 m, prawo jazdy: false, inicjał: B`.
+
+<Hint>Wzrost ma ułamek, więc nie może być intem. Prawo jazdy to odpowiedź tak/nie.</Hint>
+<Hint>Typy: `String`, `int`, `double`, `boolean`, `char`. Napisy sklejasz plusem: `imie + ", " + wiek + " lat"`.</Hint>
+<Solution>
+
+```java title="Main.java" expect="Dawid, 18 lat, 1.82 m, prawo jazdy: false, inicjał: B"
+public class Main {
+    public static void main(String[] args) {
+        String imie = "Dawid";
+        int wiek = 18;
+        double wzrost = 1.82;
+        boolean czyMaPrawoJazdy = false;
+        char inicjalNazwiska = 'B';
+
+        System.out.println(imie + ", " + wiek + " lat, " + wzrost + " m, prawo jazdy: "
+                + czyMaPrawoJazdy + ", inicjał: " + inicjalNazwiska);
+    }
+}
+```
+
+**Dlaczego tak:** każda zmienna ma typ dopasowany do danych i nazwę, z której od razu wiadomo, co trzyma. Właśnie tego wymaga kryterium R.1.
+</Solution>
+</Task>
+
+<Task id="j1-2-2" title="Zamiana trzech zmiennych w kółko" level="średnie" minutes={10}>
+Masz `int a = 1, b = 2, c = 3;`. Przesuń wartości „w kółko”, tak żeby na końcu było `a = 2, b = 3, c = 1`. Użyj tylko jednej zmiennej pomocniczej.
+
+<Hint>Która wartość zostałaby nadpisana jako pierwsza? Ją trzeba uratować w `tmp`.</Hint>
+<Hint>Uratuj `a` w `tmp`. Potem `a` dostaje `b`, `b` dostaje `c`, a `c` dostaje to, co było w `tmp`.</Hint>
+<Solution>
+
+```java check="body" expect="a = 2, b = 3, c = 1"
+int a = 1, b = 2, c = 3;
+int tmp = a;     // ratuję 1
+a = b;           // a = 2
+b = c;           // b = 3
+c = tmp;         // c = 1
+System.out.println("a = " + a + ", b = " + b + ", c = " + c);
+```
+
+**Dlaczego tak:** zasada jak przy dwóch zmiennych. Zawsze najpierw ratujesz wartość, którą zaraz nadpiszesz.
+</Solution>
+</Task>
+
+<Task id="j1-2-3" title="Średnia z trzech ocen" level="średnie" minutes={10}>
+Oceny to `int`: 5, 4, 4. Policz średnią tak, żeby wyszło `4.333333333333333`, a nie `4.0`. Potem wypisz ją zaokrągloną w dół do liczby całkowitej (powinno wyjść `4`).
+
+<Hint>Suma trzech intów to int. Dzielenie inta przez int obcina.</Hint>
+<Hint>`(double) suma / 3` daje poprawną średnią. `(int) srednia` obcina ułamek.</Hint>
+<Solution>
+
+```java check="body" expect="4.333333333333333\n4"
+int ocena1 = 5, ocena2 = 4, ocena3 = 4;
+int suma = ocena1 + ocena2 + ocena3;          // 13
+double srednia = (double) suma / 3;           // 4.333...
+System.out.println(srednia);
+System.out.println((int) srednia);            // 4: rzutowanie obcina
+```
+
+**Dlaczego tak:** `(double)` działa tylko na to, co stoi tuż za nim, czyli na `suma`. Potem double dzielone przez int daje double.
+</Solution>
+</Task>
+
+<Task id="j1-2-4" title="Sekundy na godziny" level="egzamin" minutes={15}>
+W zmiennej `int sekundy = 7384;` jest czas trwania filmu. Wypisz go w formacie `2 h 3 min 4 s`. Wykorzystaj dzielenie całkowite `/` i resztę z dzielenia `%`. Nazwy zmiennych mają być znaczące.
+
+<Hint>Godzina ma 3600 sekund. Ile pełnych godzin mieści się w 7384?</Hint>
+<Hint>`sekundy / 3600` to pełne godziny. `sekundy % 3600` to to, co zostało.</Hint>
+<Hint>Z tej reszty: `/ 60` to minuty, `% 60` to sekundy.</Hint>
+<Solution>
+
+```java check="body" expect="2 h 3 min 4 s"
+int sekundy = 7384;
+int godziny = sekundy / 3600;          // 2 (dzielenie całkowite pomaga!)
+int reszta = sekundy % 3600;           // 184
+int minuty = reszta / 60;              // 3
+int pozostaleSekundy = reszta % 60;    // 4
+System.out.println(godziny + " h " + minuty + " min " + pozostaleSekundy + " s");
+```
+
+**Dlaczego tak:** tu obcinanie przy dzieleniu intów jest zaletą. `/` mówi „ile pełnych”, a `%` „ile zostało”. Ta para wraca w algorytmach: cyfry liczby, systemy liczbowe, szyfr Cezara.
+</Solution>
+</Task>

@@ -1,0 +1,298 @@
+<Why>
+Na egzaminie program prawie zawsze **pyta użytkownika** o dane: liczbę kostek, szukaną wartość, rozmiar tablicy. A potem musi ładnie **wypisać wynik**. Kryterium R.1.7 ocenia, czy komunikaty są zrozumiałe. Ta lekcja to rozmowa programu z człowiekiem.
+</Why>
+
+## Teoria krok po kroku
+
+### 1. Scanner: ucho programu
+
+<Analogy>
+Klawiatura wysyła znaki do **bufora**, czyli takiej poczekalni. `Scanner` to recepcjonista, który z tej poczekalni wyjmuje dane: raz całą liczbę, raz jedno słowo, raz całą linię. Wszystko, czego nie wyjmie, zostaje i czeka na kolejne wywołanie.
+</Analogy>
+
+```java check="body" stdin="18"
+Scanner sc = new Scanner(System.in);     // tworzę „recepcjonistę”, który słucha klawiatury
+System.out.print("Podaj wiek: ");        // print: kursor zostaje za dwukropkiem
+int wiek = sc.nextInt();                 // program CZEKA, aż użytkownik wpisze liczbę i Enter
+```
+
+Nad klasą potrzebny jest import: `import java.util.Scanner;`. W IntelliJ wystarczy wpisać `Scanner`, a gdy podświetli się na czerwono, wcisnąć `Alt+Enter` → *Import class*.
+
+### 2. Metody Scannera
+
+| Metoda | Co czyta | Typ wyniku |
+|---|---|---|
+| `nextInt()` | liczbę całkowitą | `int` |
+| `nextDouble()` | liczbę rzeczywistą | `double` |
+| `next()` | **jedno słowo** (do spacji lub Entera) | `String` |
+| `nextLine()` | **całą linię** (do Entera) | `String` |
+| `hasNextInt()` | sprawdza, czy następna dana to liczba (nic nie zabiera) | `boolean` |
+
+### 3. Pułapka nr 1: nextInt, a potem nextLine
+
+`nextInt()` zabiera z bufora samą liczbę, a **Enter zostaje**. Następne `nextLine()` czyta „do najbliższego Entera”, więc od razu zwraca pusty napis. Zobacz to w wizualizacji poniżej.
+
+Rozwiązanie: po `nextInt()` wywołaj jeszcze raz `sc.nextLine();` i nic z wynikiem nie rób. To „zjada” zbędny Enter.
+
+### 4. Pułapka nr 2: przecinek czy kropka?
+
+Scanner czyta liczby według ustawień językowych systemu. Na polskim Windowsie `nextDouble()` oczekuje **przecinka** (`1,80`). Wpisanie `1.80` kończy się błędem `InputMismatchException`. Masz dwa wyjścia:
+
+- wpisuj liczby z przecinkiem,
+- albo zaraz po utworzeniu Scannera napisz `sc.useLocale(Locale.US);` (z importem `java.util.Locale`), a wtedy obowiązuje kropka.
+
+To samo dotyczy `printf`: na polskim systemie `%.2f` wypisze `4,40`, a nie `4.40`. To normalne.
+
+### 5. Ładne wypisywanie: printf
+
+`System.out.printf(wzór, wartości...)` wstawia wartości w miejsca znaczników:
+
+| Znacznik | Co wstawia | Przykład | Wynik |
+|---|---|---|---|
+| `%d` | liczba całkowita | `printf("%d zł", 5)` | `5 zł` |
+| `%f` | liczba rzeczywista | `printf("%f", 2.5)` | `2.500000` |
+| `%.2f` | 2 miejsca po przecinku | `printf("%.2f", 2.567)` | `2.57` (zaokrągla) |
+| `%s` | napis | `printf("Cześć %s", imie)` | `Cześć Ola` |
+| `%c` | znak | `printf("%c", 'A')` | `A` |
+| `%5d` | liczba na 5 znakach, do prawej | `printf("[%5d]", 42)` | `[   42]` |
+| `%-8s` | napis na 8 znakach, do lewej | `printf("[%-8s]", "kot")` | `[kot     ]` |
+| `%n` | nowa linia | | |
+
+`String.format(...)` działa identycznie, tylko **zwraca napis** zamiast go wypisywać. Przyda się w Androidzie: `wynik.setText(String.format("%.2f zł", suma));`.
+
+## Wizualizacja
+
+Użytkownik wpisał `18`, Enter, `Jan Kowalski`, Enter. Symbol ⏎ oznacza Enter czekający w buforze.
+
+<Trace
+  title="Dlaczego nextLine zwraca pusty napis"
+  code={`Scanner sc = new Scanner(System.in);
+int wiek = sc.nextInt();
+String imie = sc.nextLine();
+System.out.println("[" + imie + "]");`}
+  steps={[
+    { line: 1, vars: { bufor: '18⏎Jan Kowalski⏎' }, note: 'Wszystko, co wpisał użytkownik, czeka w buforze.' },
+    { line: 2, vars: { bufor: '⏎Jan Kowalski⏎', wiek: 18 }, note: 'nextInt zabiera tylko cyfry 18. Enter zostaje w buforze!' },
+    { line: 3, vars: { bufor: 'Jan Kowalski⏎', wiek: 18, imie: '""' }, note: 'nextLine czyta do najbliższego Entera. Ten Enter stoi na samym początku, więc wynik jest pusty.' },
+    { line: 4, vars: { bufor: 'Jan Kowalski⏎', wiek: 18, imie: '""' }, out: '[]\n', note: 'Imię jest puste, a „Jan Kowalski” dalej czeka w buforze. Naprawa: dodatkowe sc.nextLine() po nextInt.' },
+  ]}
+/>
+
+## Przykład kodu
+
+```java title="Main.java" stdin="2\nJan Kowalski\n3.5"
+import java.util.Locale;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        sc.useLocale(Locale.US);                      // liczby z kropką: 3.5
+
+        System.out.print("Ile biletów kupujesz? ");   // print: odpowiedź w tej samej linii
+        int liczbaBiletow = sc.nextInt();
+        sc.nextLine();                                // zjadam Enter, który został po liczbie
+
+        System.out.print("Imię i nazwisko: ");
+        String pasazer = sc.nextLine();               // cała linia razem ze spacją
+
+        System.out.print("Cena jednego biletu: ");
+        double cena = sc.nextDouble();
+
+        double razem = liczbaBiletow * cena;
+        System.out.printf("%s, do zapłaty: %.2f zł%n", pasazer, razem);   // 7.00 zł
+        String opis = String.format("%d x %.2f", liczbaBiletow, cena);     // napis, nie wypisuje
+        System.out.println("(" + opis + ")");
+    }
+}
+```
+
+Wynik po wpisaniu 2, Jan Kowalski, 3.5:
+
+```text
+Ile biletów kupujesz? 2
+Imię i nazwisko: Jan Kowalski
+Cena jednego biletu: 3.5
+Jan Kowalski, do zapłaty: 7.00 zł
+(2 x 3.50)
+```
+
+## Najczęstsze błędy
+
+<Mistake title="Brak importu">
+
+```java check="none"
+Scanner sc = new Scanner(System.in);
+```
+
+Taki kod bez linii `import java.util.Scanner;` nad klasą daje `cannot find symbol: class Scanner`. `Alt+Enter` na czerwonym słowie dopisze import za ciebie.
+</Mistake>
+
+<Mistake title="Pusty nextLine po nextInt">
+Objaw: program „przeskakuje” pytanie o imię. Przyczyna: Enter po liczbie został w buforze. Naprawa: `sc.nextLine();` zaraz po `nextInt()`.
+</Mistake>
+
+<Mistake title="Tekst zamiast liczby">
+
+```java check="throws" stdin="abc"
+Scanner sc = new Scanner(System.in);
+int x = sc.nextInt();
+```
+
+Gdy użytkownik wpisze `abc`, program wywróci się z `InputMismatchException`. Jak się przed tym zabezpieczyć, dowiesz się w lekcji 1.14.
+</Mistake>
+
+<Mistake title="Brak komunikatu przed wczytaniem">
+Program, który bez słowa czeka na dane, wygląda na zawieszony. Egzaminator oceni to jako niezrozumiałą komunikację (R.1.7). Zawsze najpierw `System.out.print("Podaj ...: ");`.
+</Mistake>
+
+## Trik na zapamiętanie
+
+<Trick title="Formuła „pytanie → odpowiedź”">
+Każde wczytanie to **para linii**: najpierw `print` z pytaniem, potem `next...()`. Tak jak w rozmowie: nie czekasz na odpowiedź, zanim nie zadasz pytania.
+
+Zapamiętaj zdanie: **„Liczba zostawia Enter”**. Jeśli po liczbie czytasz linię, wstaw `sc.nextLine();`.
+
+Znaczniki printf: **d**ecimal (`%d`), **f**loat (`%f`), **s**tring (`%s`), **c**har (`%c`), **n**ew line (`%n`).
+</Trick>
+
+## Zadania
+
+<Task id="j1-4-1" title="Ile lat w 2027?" level="łatwe" minutes={10}>
+Zapytaj o imię (jedno słowo) i rok urodzenia. Wypisz np. `Dawid, w 2027 roku skończysz 19 lat.`
+
+<Hint>Do jednego słowa wystarczy `sc.next()`. Do roku `sc.nextInt()`.</Hint>
+<Hint>Wiek to `2027 - rokUrodzenia`. Nie zapomnij o `import java.util.Scanner;`.</Hint>
+<Solution>
+
+```java title="Main.java" stdin="Dawid\n2008" expect="Dawid, w 2027 roku skończysz 19 lat."
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Imię: ");
+        String imie = sc.next();
+        System.out.print("Rok urodzenia: ");
+        int rokUrodzenia = sc.nextInt();
+
+        int wiek = 2027 - rokUrodzenia;
+        System.out.println(imie + ", w 2027 roku skończysz " + wiek + " lat.");
+    }
+}
+```
+
+**Dlaczego tak:** każde wczytanie poprzedza pytanie. Wynik liczysz w osobnej zmiennej o czytelnej nazwie, a nie w środku `println`. Tak łatwiej o poprawki.
+</Solution>
+</Task>
+
+<Task id="j1-4-2" title="Kalkulator BMI" level="średnie" minutes={10}>
+Wczytaj masę w kg i wzrost w metrach (np. 70 i 1.80). BMI = masa / wzrost². Wypisz wynik z **dwoma** miejscami po przecinku: `Twoje BMI: 21.60`.
+
+<Hint>Obie wartości są ułamkowe, więc `nextDouble()`. Żeby wpisywać kropkę, ustaw `sc.useLocale(Locale.US)`.</Hint>
+<Hint>Wzrost do kwadratu to `wzrost * wzrost`. Do formatu użyj `printf("%.2f", ...)`.</Hint>
+<Solution>
+
+```java title="Main.java" stdin="70\n1.80" expect="Twoje BMI: 21.60"
+import java.util.Locale;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        sc.useLocale(Locale.US);                 // wpisujemy 1.80 z kropką
+
+        System.out.print("Masa (kg): ");
+        double masa = sc.nextDouble();
+        System.out.print("Wzrost (m): ");
+        double wzrost = sc.nextDouble();
+
+        double bmi = masa / (wzrost * wzrost);   // nawias: najpierw kwadrat wzrostu
+        System.out.printf("Twoje BMI: %.2f%n", bmi);
+    }
+}
+```
+
+**Dlaczego tak:** bez nawiasu `masa / wzrost * wzrost` dałoby z powrotem masę, bo dzielenie i mnożenie liczą się od lewej.
+</Solution>
+</Task>
+
+<Task id="j1-4-3" title="Napraw formularz" level="średnie" minutes={10}>
+Ten program pyta o wiek, potem o imię i nazwisko. Po wpisaniu wieku od razu się kończy, a imię i nazwisko jest puste. Napraw go, dopisując **jedną** linię.
+
+```java title="Main.java" stdin="18\nJan Kowalski"
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Wiek: ");
+        int wiek = sc.nextInt();
+        System.out.print("Imię i nazwisko: ");
+        String osoba = sc.nextLine();
+        System.out.println(osoba + " ma " + wiek + " lat.");
+    }
+}
+```
+
+<Hint>Wróć do wizualizacji z buforem. Co zostaje po `nextInt()`?</Hint>
+<Hint>Enter trzeba „zjeść” zaraz po wczytaniu liczby.</Hint>
+<Solution>
+
+```java title="Main.java" stdin="18\nJan Kowalski" expect="Jan Kowalski ma 18 lat."
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Wiek: ");
+        int wiek = sc.nextInt();
+        sc.nextLine();                              // NAPRAWA: zabieram Enter z bufora
+        System.out.print("Imię i nazwisko: ");
+        String osoba = sc.nextLine();
+        System.out.println(osoba + " ma " + wiek + " lat.");
+    }
+}
+```
+</Solution>
+</Task>
+
+<Task id="j1-4-4" title="Paragon w kolumnach" level="egzamin" minutes={15}>
+Wczytaj nazwę produktu (jedno słowo), ilość (int) i cenę jednostkową (double). Wypisz paragon w równych kolumnach: nazwa wyrównana do lewej na 10 znakach, ilość do prawej na 5 znakach, cena i wartość na 8 znakach z 2 miejscami po przecinku. Dla `chleb 3 4.5`:
+
+```text
+Produkt    Ilość     Cena    Razem
+chleb          3     4.50    13.50
+```
+
+<Hint>Nagłówek też wypisz przez `printf` z tymi samymi szerokościami, ale ze znacznikami `%s`.</Hint>
+<Hint>Wzór wiersza: `"%-10s %5d %8.2f %8.2f%n"`. Minus oznacza wyrównanie do lewej.</Hint>
+<Hint>Nagłówek: `"%-10s %5s %8s %8s%n"` z napisami „Produkt”, „Ilość”, „Cena”, „Razem”.</Hint>
+<Solution>
+
+```java title="Main.java" stdin="chleb\n3\n4.5" expect="chleb          3     4.50    13.50"
+import java.util.Locale;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        sc.useLocale(Locale.US);
+
+        System.out.print("Produkt: ");
+        String produkt = sc.next();
+        System.out.print("Ilość: ");
+        int ilosc = sc.nextInt();
+        System.out.print("Cena: ");
+        double cena = sc.nextDouble();
+
+        double razem = ilosc * cena;
+        System.out.printf("%-10s %5s %8s %8s%n", "Produkt", "Ilość", "Cena", "Razem");
+        System.out.printf("%-10s %5d %8.2f %8.2f%n", produkt, ilosc, cena, razem);
+    }
+}
+```
+
+**Dlaczego tak:** liczba w znaczniku to szerokość pola. Gdy nagłówek i dane używają tych samych szerokości, kolumny się zgadzają.
+</Solution>
+</Task>

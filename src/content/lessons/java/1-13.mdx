@@ -1,0 +1,302 @@
+<Why>
+Arkusz z czerwca 2025 przyznawał punkt za „tablicę lub kolekcję o **dynamicznym rozmiarze**”. Tablica tego nie umie, a `ArrayList` tak. W Androidzie `ArrayList` zasila każdą listę na ekranie (`ListView`). A `HashMap` w trzech linijkach zlicza wystąpienia czegokolwiek.
+</Why>
+
+## Teoria krok po kroku
+
+### 1. ArrayList: tablica z gumy
+
+<Analogy>
+Tablica to **wytłaczanka na 10 jajek**: ma stałą liczbę miejsc. `ArrayList` to **koszyk**: wkładasz, ile chcesz, wyjmujesz ze środka, a reszta sama się przesuwa. Koszyk zawsze wie, ile ma w środku (`size()`).
+</Analogy>
+
+```java check="body" expect="[Ola, Dawid]"
+ArrayList<String> imiona = new ArrayList<>();   // pusty koszyk na napisy
+imiona.add("Ola");                              // [Ola]
+imiona.add("Kuba");                             // [Ola, Kuba]
+imiona.add("Dawid");                            // [Ola, Kuba, Dawid]
+imiona.remove(1);                               // usuwam indeks 1, reszta się przesuwa: [Ola, Dawid]
+System.out.println(imiona);                     // lista wypisuje się sama, bez pętli
+```
+
+Import: `import java.util.ArrayList;` (albo `Alt+Enter`).
+
+### 2. Najważniejsze metody
+
+| Metoda | Co robi | Tablica dla porównania |
+|---|---|---|
+| `add(x)` | dodaje na koniec | (nie da się) |
+| `add(i, x)` | wstawia na pozycję i | (nie da się) |
+| `get(i)` | odczyt | `t[i]` |
+| `set(i, x)` | zamiana | `t[i] = x` |
+| `remove(i)` | usuwa element o indeksie i | (nie da się) |
+| `size()` | liczba elementów | `t.length` |
+| `contains(x)` | czy zawiera | (pętla) |
+| `indexOf(x)` | pozycja albo −1 | (pętla) |
+| `isEmpty()` | czy pusta | |
+| `clear()` | usuwa wszystko | |
+
+Pomocnicze metody z klasy `Collections`: `sort(lista)`, `max(lista)`, `min(lista)`, `shuffle(lista)` (tasowanie), `reverse(lista)`.
+
+### 3. Integer zamiast int
+
+Kolekcje przechowują tylko **obiekty**. Dla typów prostych istnieją „opakowania”:
+
+| Typ prosty | Opakowanie |
+|---|---|
+| `int` | `Integer` |
+| `double` | `Double` |
+| `boolean` | `Boolean` |
+| `char` | `Character` |
+
+Piszesz `ArrayList<Integer>`, a Java sama zamienia `int` na `Integer` i z powrotem (to *autoboxing*). Możesz spokojnie robić `lista.add(5)` i `int x = lista.get(0)`.
+
+### 4. HashMap: słownik klucz → wartość
+
+<Analogy>
+Szatnia. Oddajesz kurtkę i dostajesz numerek. Numerek to **klucz**, kurtka to **wartość**. Po numerku od razu znajdujesz kurtkę, bez przeszukiwania wszystkich wieszaków.
+</Analogy>
+
+```java check="body" expect="2"
+HashMap<String, Integer> ileRazy = new HashMap<>();   // klucz: słowo, wartość: licznik
+ileRazy.put("kot", 1);                                 // dodaj albo nadpisz
+ileRazy.put("kot", ileRazy.getOrDefault("kot", 0) + 1); // zwiększ licznik
+System.out.println(ileRazy.get("kot"));                // 2
+// containsKey(klucz), remove(klucz), keySet() (wszystkie klucze), size()
+```
+
+`HashMap` nie zachowuje kolejności. Jeśli chcesz mieć klucze posortowane, użyj `TreeMap`. Metody są te same.
+
+## Wizualizacja
+
+<Trace
+  title="Losowanie bez powtórzeń (lotto)"
+  code={`ArrayList<Integer> wylosowane = new ArrayList<>();
+while (wylosowane.size() < 3) {
+    int los = r.nextInt(49) + 1;
+    if (!wylosowane.contains(los)) {
+        wylosowane.add(los);
+    }
+}
+System.out.println(wylosowane);`}
+  steps={[
+    { line: 1, vars: { wylosowane: [] }, note: 'Pusta lista. size() = 0.' },
+    { line: 3, vars: { wylosowane: [], los: 7 }, note: 'Losujemy 7.' },
+    { line: 5, vars: { wylosowane: [7], los: 7 }, note: 'Siódemki jeszcze nie ma, więc dodajemy. Lista sama się wydłuża.' },
+    { line: 3, vars: { wylosowane: [7], los: 12 } },
+    { line: 5, vars: { wylosowane: [7, 12], los: 12 } },
+    { line: 3, vars: { wylosowane: [7, 12], los: 7 }, note: 'Znowu 7!' },
+    { line: 4, vars: { wylosowane: [7, 12], los: 7 }, note: 'contains(7) daje true, więc warunek z ! jest fałszywy. Nie dodajemy. Pętla losuje jeszcze raz, bo size() to dalej 2.' },
+    { line: 3, vars: { wylosowane: [7, 12], los: 30 } },
+    { line: 5, vars: { wylosowane: [7, 12, 30], los: 30 }, note: 'size() = 3, więc pętla się kończy.' },
+    { line: 8, vars: { wylosowane: [7, 12, 30] }, out: '[7, 12, 30]\n' },
+  ]}
+/>
+
+Z tablicą tego nie zrobisz tak prosto: nie wiadomo z góry, ile razy trzeba będzie losować.
+
+## Przykład kodu
+
+```java title="Main.java" expect="Posortowane: [2, 4, 7, 9, 15]"
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+
+public class Main {
+    public static void main(String[] args) {
+        ArrayList<Integer> wyniki = new ArrayList<>();
+        int[] doDodania = {7, 2, 15, -3, 9, 4};
+        for (int w : doDodania) {
+            if (w >= 0) {                              // dodaję tylko nieujemne
+                wyniki.add(w);
+            }
+        }
+        System.out.println("Wyniki: " + wyniki + " (" + wyniki.size() + " szt.)");
+
+        Collections.sort(wyniki);                      // sortuje tę samą listę
+        System.out.println("Posortowane: " + wyniki);
+        System.out.println("Max: " + Collections.max(wyniki) + ", min: " + Collections.min(wyniki));
+
+        int suma = 0;
+        for (int w : wyniki) {                         // for-each działa jak w tablicy
+            suma += w;
+        }
+        System.out.println("Suma: " + suma);
+
+        // Zliczanie ocen mapą: ocena -> ile razy
+        int[] oceny = {5, 3, 5, 4, 5, 3};
+        HashMap<Integer, Integer> ileOcen = new HashMap<>();
+        for (int o : oceny) {
+            ileOcen.put(o, ileOcen.getOrDefault(o, 0) + 1);
+        }
+        for (int ocena : ileOcen.keySet()) {
+            System.out.println("Ocena " + ocena + ": " + ileOcen.get(ocena) + "x");
+        }
+    }
+}
+```
+
+## Najczęstsze błędy
+
+<Mistake title="ArrayList<int>">
+
+```java check="error"
+ArrayList<int> lista = new ArrayList<>();
+```
+
+`unexpected type: required reference, found int`. W nawiasach ostrych zawsze opakowanie: `Integer`, `Double`, `String`.
+</Mistake>
+
+<Mistake title="remove(wartość), które usuwa indeks">
+
+```java check="body" expect="[10, 30, 5]"
+ArrayList<Integer> lista = new ArrayList<>();
+lista.add(10); lista.add(20); lista.add(30); lista.add(5);
+lista.remove(1);                       // chciałeś usunąć „1”? usunął element o indeksie 1, czyli 20
+System.out.println(lista);
+// usuwanie WARTOŚCI: lista.remove(Integer.valueOf(30));
+```
+</Mistake>
+
+<Mistake title="Usuwanie w pętli for-each">
+
+```java check="throws"
+ArrayList<Integer> lista = new ArrayList<>(List.of(1, -2, -3, 4));
+for (int x : lista) {
+    if (x < 0) lista.remove(Integer.valueOf(x));
+}
+```
+
+`ConcurrentModificationException`: nie wolno zmieniać listy, po której właśnie idzie for-each. Rozwiązania: `lista.removeIf(x -> x < 0);` albo zwykła pętla **od końca** z `remove(i)`.
+</Mistake>
+
+<Mistake title="get poza zakresem">
+`lista.get(lista.size())` rzuca `IndexOutOfBoundsException`. Ostatni element to `lista.get(lista.size() - 1)`, dokładnie jak w tablicy.
+</Mistake>
+
+## Trik na zapamiętanie
+
+<Trick title="Tablica czy lista? Jedno pytanie">
+**„Czy wiem, ile tego będzie, i czy to się nie zmieni?”** Tak → tablica (5 kostek, 50 liczb). Nie → `ArrayList` (zakupy, wylosowane bez powtórzeń, wyniki spełniające warunek).
+
+Metody listy zapamiętaj jako **„ADD-GET-SET-REMOVE-SIZE”**. Do zliczania: **„weź dotychczasowe albo zero, dodaj jeden”** → `getOrDefault(k, 0) + 1`.
+</Trick>
+
+## Zadania
+
+<Task id="j1-13-1" title="Lotto 6 z 49 (arkusz 2025)" level="egzamin" minutes={20}>
+Napisz metodę `static ArrayList<Integer> losujLotto()`, która zwraca 6 **różnych** liczb z zakresu 1–49. W `main` wywołaj ją 3 razy (trzy losowania), wypisz każde losowanie posortowane i sprawdź, czy rzeczywiście ma 6 różnych liczb.
+
+<Hint>Pętla `while (lista.size() < 6)` z `contains`, dokładnie jak w wizualizacji.</Hint>
+<Hint>Losowanie 1–49: `generator.nextInt(49) + 1`. Generator `Random` utwórz raz, jako pole `static`.</Hint>
+<Hint>Sprawdzenie różności: przejdź po liście i porównaj `indexOf(x)` z `lastIndexOf(x)`. Albo prościej: `new HashSet<>(lista).size() == 6`.</Hint>
+<Solution>
+
+```java title="Main.java" expect="Różne: true"
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
+
+public class Main {
+    static final Random GENERATOR = new Random();
+
+    static ArrayList<Integer> losujLotto() {
+        ArrayList<Integer> wylosowane = new ArrayList<>();
+        while (wylosowane.size() < 6) {
+            int los = GENERATOR.nextInt(49) + 1;       // 1..49
+            if (!wylosowane.contains(los)) {
+                wylosowane.add(los);
+            }
+        }
+        Collections.sort(wylosowane);
+        return wylosowane;
+    }
+
+    static boolean czyRozne(ArrayList<Integer> liczby) {
+        for (int x : liczby) {
+            if (liczby.indexOf(x) != liczby.lastIndexOf(x)) {
+                return false;                           // ta sama liczba na dwóch pozycjach
+            }
+        }
+        return true;
+    }
+
+    public static void main(String[] args) {
+        for (int numer = 1; numer <= 3; numer++) {
+            ArrayList<Integer> losowanie = losujLotto();
+            System.out.println("Losowanie " + numer + ": " + losowanie + " Różne: " + czyRozne(losowanie));
+        }
+    }
+}
+```
+
+**Dlaczego tak:** rozmiar listy to naturalny warunek pętli. Nie wiesz, ile razy trafisz na powtórkę, więc `for` z góry ustaloną liczbą obrotów by tu nie zadziałał.
+</Solution>
+</Task>
+
+<Task id="j1-13-2" title="Lista zakupów z menu" level="średnie" minutes={20}>
+Program z menu w pętli: `1` dodaj produkt, `2` usuń produkt po nazwie, `3` wypisz listę z numerami (od 1), `0` koniec. Przy usuwaniu nieistniejącego produktu wypisz komunikat.
+
+<Hint>Menu to `do { ... } while (wybor != 0);` ze `switch` w środku.</Hint>
+<Hint>`lista.remove("chleb")` dla listy napisów usuwa po wartości i zwraca `true`/`false`, czy się udało.</Hint>
+<Solution>
+
+```java title="Main.java" stdin="1\nchleb\n1\nmleko\n2\nmasło\n2\nchleb\n3\n0" expect="1. mleko"
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        ArrayList<String> zakupy = new ArrayList<>();
+        int wybor;
+
+        do {
+            System.out.print("1-dodaj 2-usuń 3-pokaż 0-koniec: ");
+            wybor = sc.nextInt();
+            switch (wybor) {
+                case 1 -> {
+                    System.out.print("Produkt: ");
+                    zakupy.add(sc.next());
+                }
+                case 2 -> {
+                    System.out.print("Który usunąć: ");
+                    String produkt = sc.next();
+                    if (!zakupy.remove(produkt)) {          // remove zwraca, czy coś usunął
+                        System.out.println("Nie ma takiego produktu na liście.");
+                    }
+                }
+                case 3 -> {
+                    for (int i = 0; i < zakupy.size(); i++) {
+                        System.out.println((i + 1) + ". " + zakupy.get(i));
+                    }
+                }
+                case 0 -> System.out.println("Do widzenia!");
+                default -> System.out.println("Nieznana opcja.");
+            }
+        } while (wybor != 0);
+    }
+}
+```
+</Solution>
+</Task>
+
+<Task id="j1-13-3" title="Ile razy każde słowo?" level="średnie" minutes={15}>
+Dla zdania `"ala ma kota a kot ma ale"` policz wystąpienia każdego słowa mapą i wypisz je w kolejności alfabetycznej (`TreeMap`). `ma` powinno wystąpić 2 razy.
+
+<Hint>`split(" ")` daje tablicę słów.</Hint>
+<Hint>`TreeMap<String, Integer>` ma te same metody co `HashMap`, ale trzyma klucze posortowane.</Hint>
+<Solution>
+
+```java check="body" expect="ma: 2"
+String zdanie = "ala ma kota a kot ma ale";
+TreeMap<String, Integer> licznik = new TreeMap<>();
+for (String slowo : zdanie.split(" ")) {
+    licznik.put(slowo, licznik.getOrDefault(slowo, 0) + 1);
+}
+for (String slowo : licznik.keySet()) {
+    System.out.println(slowo + ": " + licznik.get(slowo));
+}
+```
+</Solution>
+</Task>

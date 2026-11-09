@@ -1,0 +1,300 @@
+<Why>
+Użytkownik zawsze w końcu wpisze coś głupiego: literę zamiast liczby, puste pole, zero do dzielenia. Program, który się wtedy wywraca, wygląda na egzaminie fatalnie, a aplikacja na Androidzie pokazuje „przestała działać”. Wyjątki pozwalają takie sytuacje **przewidzieć i obsłużyć**.
+</Why>
+
+## Teoria krok po kroku
+
+### 1. Wyjątek to „awaria w trakcie jazdy”
+
+Błąd kompilacji wychwyci IntelliJ, zanim cokolwiek uruchomisz. **Wyjątek** pojawia się dopiero podczas działania programu, gdy dzieje się coś, czego kod się nie spodziewał.
+
+<Analogy>
+Jedziesz autem (program działa). Nagle złapałeś gumę (wyjątek). Bez koła zapasowego (`catch`) stajesz na poboczu i koniec jazdy. Z kołem zapasowym wymieniasz oponę i jedziesz dalej. A `finally` to zapięte pasy: działają niezależnie od tego, czy była awaria.
+</Analogy>
+
+### 2. Jak czytać komunikat o wyjątku
+
+```text
+Exception in thread "main" java.lang.ArithmeticException: / by zero
+	at Main.podziel(Main.java:4)
+	at Main.main(Main.java:9)
+```
+
+1. **Pierwsza linia:** nazwa wyjątku (`ArithmeticException`) i opis (`/ by zero`).
+2. **Linie `at`:** gdzie to się stało. Czytaj od góry i szukaj **swojego pliku**: `Main.java:4` to linia 4. W IntelliJ ten napis jest klikalny i przenosi prosto do błędu.
+
+### 3. Najczęstsze wyjątki
+
+| Wyjątek | Kiedy | Przykład |
+|---|---|---|
+| `ArithmeticException` | dzielenie całkowite przez 0 | `5 / 0` |
+| `ArrayIndexOutOfBoundsException` | indeks poza tablicą | `t[t.length]` |
+| `NullPointerException` | metoda na `null` | `String s = null; s.length();` |
+| `NumberFormatException` | tekst, który nie jest liczbą | `Integer.parseInt("12a")` |
+| `InputMismatchException` | Scanner dostał nie to, co miał | `nextInt()`, a wpisano `abc` |
+| `StringIndexOutOfBoundsException` | zły indeks w napisie | `"kot".charAt(5)` |
+
+(Ciekawostka: `5.0 / 0` **nie** rzuca wyjątku, tylko daje `Infinity`.)
+
+### 4. try / catch / finally
+
+```java check="body" expect="Nie dziel przez zero!\nKoniec obliczeń"
+try {
+    int wynik = 10 / 0;                       // tu wyskakuje wyjątek...
+    System.out.println(wynik);                // ...więc ta linia się NIE wykona
+} catch (ArithmeticException e) {             // „łapię” ten konkretny rodzaj wyjątku
+    System.out.println("Nie dziel przez zero!");
+} finally {
+    System.out.println("Koniec obliczeń");    // wykona się ZAWSZE
+}
+```
+
+- Może być kilka bloków `catch` dla różnych wyjątków. Sprawdzane są po kolei.
+- `catch (Exception e)` łapie prawie wszystko. Wygodne, ale ukrywa, co dokładnie poszło źle. Na egzaminie lepiej łapać konkretne wyjątki.
+- `e.getMessage()` zwraca opis błędu.
+
+### 5. throw: sam zgłaszasz problem
+
+Twoja metoda może odmówić pracy z bzdurnymi danymi:
+
+```java check="class"
+static double pierwiastek(double x) {
+    if (x < 0) {
+        throw new IllegalArgumentException("Liczba nie może być ujemna: " + x);
+    }
+    return Math.sqrt(x);
+}
+```
+
+### 6. Wyjątki sprawdzane i niesprawdzane (do testu)
+
+- **Niesprawdzane** (`RuntimeException` i potomkowie: wszystkie z tabeli wyżej): kompilator nie każe ich obsługiwać.
+- **Sprawdzane** (np. `IOException` przy czytaniu pliku): kompilator **wymaga** `try/catch` albo `throws` w nagłówku metody.
+
+### 7. Walidacja zamiast łapania
+
+Często lepiej **nie dopuścić** do wyjątku, niż go łapać. Scanner ma metody `hasNextInt()`, `hasNextDouble()`, które sprawdzają, co czeka w buforze, nic nie zabierając:
+
+```java check="body" stdin="abc\n5" expect="Wczytano: 5"
+Scanner sc = new Scanner(System.in);
+System.out.print("Podaj liczbę: ");
+while (!sc.hasNextInt()) {                      // dopóki w buforze NIE czeka liczba
+    System.out.print("To nie jest liczba. Spróbuj jeszcze raz: ");
+    sc.next();                                  // wyrzucam złe słowo z bufora
+}
+int liczba = sc.nextInt();
+System.out.println("Wczytano: " + liczba);
+```
+
+## Wizualizacja
+
+<Trace
+  title="Którędy idzie program przy wyjątku"
+  code={`try {
+    System.out.println("A");
+    int x = 10 / 0;
+    System.out.println("B");
+} catch (ArithmeticException e) {
+    System.out.println("Błąd: " + e.getMessage());
+} finally {
+    System.out.println("C");
+}
+System.out.println("D");`}
+  steps={[
+    { line: 2, out: 'A\n', note: 'Normalne wykonanie w bloku try.' },
+    { line: 3, note: 'Dzielenie przez zero! Powstaje obiekt ArithmeticException i program natychmiast przerywa blok try.' },
+    { line: 5, note: 'Linia z „B” jest POMINIĘTA. Java szuka pasującego catch i znajduje go.' },
+    { line: 6, out: 'Błąd: / by zero\n', note: 'e.getMessage() zwraca opis wyjątku.' },
+    { line: 8, out: 'C\n', note: 'finally wykonuje się zawsze.' },
+    { line: 10, out: 'D\n', note: 'Program żyje dalej. Bez try/catch zakończyłby się na linii 3 z czerwonym komunikatem.' },
+  ]}
+/>
+
+## Przykład kodu
+
+Wzorzec przydatny w Androidzie: tekst z pola zamieniasz na liczbę i nie pozwalasz aplikacji się wywrócić.
+
+```java title="Main.java" expect="Suma poprawnych: 19"
+public class Main {
+
+    /** Zamienia tekst na liczbę; gdy się nie da, zwraca wartość domyślną. */
+    static int naLiczbe(String tekst, int domyslna) {
+        try {
+            return Integer.parseInt(tekst.trim());      // trim usuwa spacje z brzegów
+        } catch (NumberFormatException e) {
+            return domyslna;                            // pusty tekst, litery itp.
+        }
+    }
+
+    static void ustawWiek(int wiek) {
+        if (wiek < 0 || wiek > 130) {
+            throw new IllegalArgumentException("Nierealny wiek: " + wiek);
+        }
+        System.out.println("Ustawiono wiek " + wiek);
+    }
+
+    public static void main(String[] args) {
+        String[] zPol = {"12", " 7 ", "abc", "", "-x"};  // jak gdyby wpisane w pola formularza
+        int suma = 0;
+        for (String tekst : zPol) {
+            suma += naLiczbe(tekst, 0);
+        }
+        System.out.println("Suma poprawnych: " + suma);  // 12 + 7 = 19
+
+        try {
+            ustawWiek(18);
+            ustawWiek(-5);                               // rzuci wyjątek
+            ustawWiek(20);                               // już się nie wykona
+        } catch (IllegalArgumentException e) {
+            System.out.println("Odrzucono: " + e.getMessage());
+        }
+    }
+}
+```
+
+## Najczęstsze błędy
+
+<Mistake title="Pusty catch">
+`catch (Exception e) { }` „połyka” błąd po cichu. Program działa dalej, ale źle, a ty nie wiesz dlaczego. Zawsze coś zrób: komunikat dla użytkownika, wartość domyślna, a przy debugowaniu `e.printStackTrace()`.
+</Mistake>
+
+<Mistake title="Pętla walidująca bez wyrzucenia złych danych">
+W pętli z `hasNextInt()` zapomniałeś `sc.next()`? Złe słowo zostaje w buforze, `hasNextInt()` w kółko daje `false` i pętla nigdy się nie kończy.
+</Mistake>
+
+<Mistake title="Zmienna zadeklarowana w try, użyta po nim">
+
+```java check="error"
+try {
+    int liczba = Integer.parseInt("5");
+} catch (NumberFormatException e) {
+    System.out.println("zła liczba");
+}
+System.out.println(liczba);
+```
+
+Zmienna z bloku `try` żyje tylko w nim. Zadeklaruj ją przed `try` z wartością początkową: `int liczba = 0;`.
+</Mistake>
+
+<Mistake title="try/catch zamiast if">
+`try { t[i] = 5; } catch (ArrayIndexOutOfBoundsException e) {}` to łatanie złego kodu. Jeśli możesz sprawdzić warunek (`if (i < t.length)`), sprawdź go. Wyjątki są na sytuacje, których nie da się łatwo przewidzieć, np. co wpisze człowiek.
+</Mistake>
+
+## Trik na zapamiętanie
+
+<Trick title="Try = spróbuj, catch = złap, finally = na koniec zawsze">
+**„Spróbuj, a jak spadnie, złap. Posprzątaj zawsze.”**
+
+Przy stack trace: **szukaj swojego pliku i numeru linii**. Reszta to wnętrzności Javy.
+
+Odporny Scanner to trzy linijki: **„dopóki nie liczba, ostrzeż i wyrzuć słowo”**.
+</Trick>
+
+## Zadania
+
+<Task id="j1-14-1" title="Bezpieczny kalkulator" level="łatwe" minutes={10}>
+Napisz metodę `static String podziel(int a, int b)`, która zwraca wynik dzielenia całkowitego jako tekst, a przy dzieleniu przez zero zwraca `"Nie można dzielić przez zero"`. Użyj `try/catch`, a nie `if`.
+
+<Hint>W `try` zwróć `String.valueOf(a / b)`.</Hint>
+<Hint>Złap `ArithmeticException` i zwróć komunikat.</Hint>
+<Solution>
+
+```java title="Main.java" expect="5\nNie można dzielić przez zero"
+public class Main {
+    static String podziel(int a, int b) {
+        try {
+            return String.valueOf(a / b);
+        } catch (ArithmeticException e) {
+            return "Nie można dzielić przez zero";
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println(podziel(10, 2));
+        System.out.println(podziel(10, 0));
+    }
+}
+```
+
+**Uwaga:** w prawdziwym kodzie wystarczyłoby `if (b == 0)`. To zadanie ćwiczy samą składnię.
+</Solution>
+</Task>
+
+<Task id="j1-14-2" title="Odporne wczytywanie z zakresu" level="egzamin" minutes={20}>
+Napisz metodę `static int wczytajZZakresu(Scanner sc, int min, int max)`, która pyta o liczbę tak długo, aż użytkownik poda **liczbę całkowitą** z przedziału `min`–`max`. Na tekst reaguje komunikatem „To nie jest liczba”, a na liczbę spoza zakresu komunikatem „Liczba musi być od min do max”. Przetestuj na liczbie kostek 3–10 i danych: `abc`, `20`, `5`.
+
+<Hint>Zewnętrzna pętla nieskończona `while (true)`, z której wychodzisz przez `return`, gdy wszystko jest dobrze.</Hint>
+<Hint>W środku: najpierw `if (!sc.hasNextInt())` → komunikat, `sc.next()`, `continue`.</Hint>
+<Hint>Potem `int n = sc.nextInt();` i sprawdzenie zakresu. Dobry wynik → `return n;`.</Hint>
+<Solution>
+
+```java title="Main.java" stdin="abc\n20\n5" expect="Rzucamy 5 kostkami."
+import java.util.Scanner;
+
+public class Main {
+    static int wczytajZZakresu(Scanner sc, int min, int max) {
+        while (true) {
+            System.out.print("Podaj liczbę (" + min + "-" + max + "): ");
+            if (!sc.hasNextInt()) {
+                System.out.println("To nie jest liczba.");
+                sc.next();                                     // wyrzucam złe słowo
+                continue;
+            }
+            int n = sc.nextInt();
+            if (n >= min && n <= max) {
+                return n;                                      // jedyne wyjście z pętli
+            }
+            System.out.println("Liczba musi być od " + min + " do " + max + ".");
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int liczbaKostek = wczytajZZakresu(sc, 3, 10);
+        System.out.println("Rzucamy " + liczbaKostek + " kostkami.");
+    }
+}
+```
+
+**Dlaczego tak:** ta metoda przyda ci się w każdym arkuszu z wczytywaniem. Napisz ją raz porządnie i ćwicz, aż napiszesz ją z pamięci w 2 minuty.
+</Solution>
+</Task>
+
+<Task id="j1-14-3" title="Wiek z walidacją przez throw" level="średnie" minutes={15}>
+Klasa `Osoba` z prywatnym polem `wiek` i setterem, który rzuca `IllegalArgumentException`, gdy wiek jest spoza 0–130. W `main` spróbuj ustawić wiek 25, a potem -3. Złap wyjątek i wypisz jego komunikat. Na końcu wypisz wiek osoby (powinno zostać 25).
+
+<Hint>`throw new IllegalArgumentException("Nieprawidłowy wiek: " + wiek);`</Hint>
+<Hint>Po rzuceniu wyjątku przypisanie `this.wiek = wiek` się nie wykona, więc stara wartość zostaje.</Hint>
+<Solution>
+
+```java title="Main.java" expect="Błąd: Nieprawidłowy wiek: -3\nWiek: 25"
+class Osoba {
+    private int wiek;
+
+    public void setWiek(int wiek) {
+        if (wiek < 0 || wiek > 130) {
+            throw new IllegalArgumentException("Nieprawidłowy wiek: " + wiek);
+        }
+        this.wiek = wiek;                  // wykona się tylko dla poprawnego wieku
+    }
+
+    public int getWiek() {
+        return wiek;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Osoba osoba = new Osoba();
+        try {
+            osoba.setWiek(25);
+            osoba.setWiek(-3);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Błąd: " + e.getMessage());
+        }
+        System.out.println("Wiek: " + osoba.getWiek());
+    }
+}
+```
+</Solution>
+</Task>

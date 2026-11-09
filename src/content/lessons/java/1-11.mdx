@@ -1,0 +1,458 @@
+<Why>
+Arkusz ze stycznia 2026 przyznawał osobne punkty za: konstruktor bezparametrowy, konstruktor z parametrem, zwiększanie **pola statycznego** w konstruktorze i wypisanie **liczby instancji**. Ten sam zestaw (plus konstruktor kopiujący) wraca w wielu zadaniach przygotowujących do INF.04. To czyste punkty, jeśli znasz te wzorce.
+</Why>
+
+## Teoria krok po kroku
+
+### 1. Konstruktor ustawia obiekt na start
+
+<Analogy>
+Konstruktor to **odbiór nowego samochodu z salonu**. Mówisz: „poproszę czerwony, z automatem” (parametry), a salon wydaje auto gotowe do jazdy. Bez konstruktora dostałbyś pustą karoserię i sam musiałbyś wszystko montować (ustawiać pola jedno po drugim).
+</Analogy>
+
+Zasady:
+- nazwa **identyczna jak klasa**,
+- **brak typu zwracanego** (nawet `void`),
+- wywołuje się automatycznie przy `new`.
+
+### 2. Rodzaje konstruktorów
+
+```java check="types"
+class Osoba {
+    private int id;
+    private String imie;
+
+    public Osoba() {                       // 1. bezparametrowy: wartości domyślne
+        id = 0;
+        imie = "";
+    }
+
+    public Osoba(int id, String imie) {    // 2. z parametrami
+        this.id = id;
+        this.imie = imie;
+    }
+
+    public Osoba(Osoba inna) {             // 3. kopiujący: nowy obiekt z danymi innego
+        this.id = inna.id;                 // w tej samej klasie widać pola private innego obiektu
+        this.imie = inna.imie;
+    }
+}
+```
+
+Kilka konstruktorów w jednej klasie to **przeciążanie**. Java wybiera właściwy po argumentach: `new Osoba()`, `new Osoba(7, "Ola")`, `new Osoba(ola)`.
+
+**Uwaga:** jeśli nie napiszesz **żadnego** konstruktora, Java doda pusty bezparametrowy. Gdy napiszesz jakikolwiek, ten automatyczny znika.
+
+### 3. this(...): jeden konstruktor woła drugi
+
+```java check="types"
+class Kostka {
+    private int wartosc;
+
+    public Kostka(int wartosc) {
+        this.wartosc = (wartosc >= 1 && wartosc <= 6) ? wartosc : 1;
+    }
+
+    public Kostka() {
+        this(1);           // MUSI być pierwszą instrukcją: korzysta z logiki konstruktora wyżej
+    }
+}
+```
+
+Dzięki temu walidacja jest w jednym miejscu.
+
+### 4. static: wspólne dla całej klasy
+
+<Analogy>
+W klasie szkolnej każdy uczeń ma **własny** zeszyt (zwykłe pole), ale jest **jedna** tablica na ścianie, wspólna dla wszystkich (pole `static`). Gdy ktoś coś na niej dopisze, widzą to wszyscy.
+</Analogy>
+
+- **Pole static** istnieje w jednym egzemplarzu, niezależnie od liczby obiektów. Odwołujesz się przez nazwę klasy: `Osoba.liczbaInstancji`.
+- **Metoda static** należy do klasy, nie do obiektu. Nie ma `this`, więc nie widzi zwykłych pól. Znasz już takie: `Math.max()`, `Integer.parseInt()` i wszystkie metody, które pisałeś obok `main`.
+- **Stała**: `public static final int MAX = 6;` (wspólna i niezmienna).
+
+### 5. Wzorzec: licznik instancji
+
+```java check="types"
+class Osoba {
+    private static int liczbaInstancji = 0;   // jedno pole dla wszystkich osób
+
+    public Osoba() {
+        liczbaInstancji++;                    // w KAŻDYM konstruktorze
+    }
+
+    public static int getLiczbaInstancji() {  // getter też static
+        return liczbaInstancji;
+    }
+}
+```
+
+Jeśli konstruktory delegują przez `this(...)`, licznik zwiększasz tylko w tym, do którego wszystkie trafiają. Inaczej jeden obiekt policzyłby się dwa razy.
+
+## Wizualizacja
+
+<Trace
+  title="Pole static vs zwykłe pole"
+  code={`class Kosc {
+    static int licznik = 0;
+    int numer;
+    Kosc() {
+        licznik++;
+        numer = licznik;
+    }
+}
+Kosc a = new Kosc();
+Kosc b = new Kosc();
+System.out.println(Kosc.licznik + " " + a.numer + " " + b.numer);`}
+  steps={[
+    { line: 2, vars: { 'Kosc.licznik (wspólne)': 0 }, note: 'Pole static powstaje raz, zanim utworzysz jakikolwiek obiekt.' },
+    { line: 9, vars: { 'Kosc.licznik (wspólne)': 0 }, note: 'new Kosc() uruchamia konstruktor dla nowego obiektu a.' },
+    { line: 5, vars: { 'Kosc.licznik (wspólne)': 1, 'a.numer': 0 }, note: 'Wspólny licznik rośnie do 1.' },
+    { line: 6, vars: { 'Kosc.licznik (wspólne)': 1, 'a.numer': 1 }, note: 'Kość a dostaje WŁASNY numer 1.' },
+    { line: 10, vars: { 'Kosc.licznik (wspólne)': 1, 'a.numer': 1 }, note: 'Druga kość.' },
+    { line: 5, vars: { 'Kosc.licznik (wspólne)': 2, 'a.numer': 1, 'b.numer': 0 }, note: 'To SAMO pole licznik rośnie do 2. Kość b go nie dostała „od nowa”.' },
+    { line: 6, vars: { 'Kosc.licznik (wspólne)': 2, 'a.numer': 1, 'b.numer': 2 }, note: 'b.numer = 2, a a.numer dalej 1: zwykłe pola są osobne dla każdego obiektu.' },
+    { line: 11, vars: { 'Kosc.licznik (wspólne)': 2, 'a.numer': 1, 'b.numer': 2 }, out: '2 1 2\n' },
+  ]}
+/>
+
+## Przykład kodu
+
+```java title="Main.java" expect="Liczba biletów: 2"
+class Bilet {
+    public static final double CENA_ULGOWA = 2.20;     // stała klasowa
+    private static int liczbaBiletow = 0;              // wspólny licznik
+
+    private int numer;
+    private boolean ulgowy;
+
+    public Bilet(boolean ulgowy) {                     // główny konstruktor
+        liczbaBiletow++;                               // licznik rośnie TYLKO tutaj
+        this.numer = liczbaBiletow;
+        this.ulgowy = ulgowy;
+    }
+
+    public Bilet() {
+        this(false);                                   // deleguje: domyślnie bilet normalny
+    }
+
+    public Bilet(Bilet wzor) {                         // kopiujący: ten sam rodzaj, nowy numer
+        this(wzor.ulgowy);
+    }
+
+    public double cena() {
+        return ulgowy ? CENA_ULGOWA : 2 * CENA_ULGOWA;
+    }
+
+    public static int getLiczbaBiletow() {
+        return liczbaBiletow;
+    }
+
+    @Override
+    public String toString() {
+        return "Bilet nr " + numer + (ulgowy ? " (ulgowy) " : " (normalny) ") + String.format("%.2f zł", cena());
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Bilet pierwszy = new Bilet();
+        System.out.println(pierwszy);
+        System.out.println("Liczba biletów: " + Bilet.getLiczbaBiletow());   // przez nazwę klasy
+
+        Bilet kopia = new Bilet(pierwszy);
+        System.out.println(kopia);
+        System.out.println("Liczba biletów: " + Bilet.getLiczbaBiletow());
+    }
+}
+```
+
+## Najczęstsze błędy
+
+<Mistake title="Typ zwracany przy konstruktorze">
+`public void Osoba() { ... }` to **zwykła metoda**, która przypadkiem nazywa się jak klasa. Konstruktor się nie wywoła, a pola zostaną puste. Konstruktor nie ma typu zwracanego.
+</Mistake>
+
+<Mistake title="Zniknął konstruktor bezparametrowy">
+
+```java check="error"
+class Punkt {
+    int x;
+    Punkt(int x) { this.x = x; }
+}
+class Test {
+    void f() { Punkt p = new Punkt(); }
+}
+```
+
+`constructor Punkt in class Punkt cannot be applied to given types`. Gdy dodasz konstruktor z parametrami, domyślny znika. Jeśli go potrzebujesz, napisz go sam.
+</Mistake>
+
+<Mistake title="this(...) nie na początku">
+`public Kostka() { System.out.println("x"); this(1); }` się nie skompiluje: `call to this must be first statement in constructor`.
+</Mistake>
+
+<Mistake title="Licznik zwiększany dwa razy">
+Jeśli `Bilet()` woła `this(false)`, a **oba** konstruktory robią `liczbaBiletow++`, jeden bilet policzy się podwójnie. Zwiększaj licznik w jednym miejscu: tam, gdzie zbiegają się wszystkie konstruktory.
+</Mistake>
+
+<Mistake title="Pole static zamiast zwykłego">
+Gdyby `numer` był `static`, wszystkie bilety miałyby ten sam (ostatni) numer. Pytaj siebie: **czy każdy obiekt ma mieć własną wartość?** Tak → zwykłe pole. Jedna dla wszystkich → `static`.
+</Mistake>
+
+## Trik na zapamiętanie
+
+<Trick title="BPK + licznik">
+Trzy konstruktory z arkuszy zapamiętaj jako **BPK**:
+
+- **B**ez parametrów → wartości domyślne (0, "", false) albo losowanie,
+- **P**arametry → `this.pole = pole;` (z walidacją, jeśli treść jej wymaga),
+- **K**opiujący → `this.pole = inny.pole;`.
+
+Do tego **licznik**: `static int` + `++` w każdym konstruktorze (albo w jednym, do którego wszystkie delegują).
+
+Static zapamiętaj zdaniem: **„static = tablica na ścianie, zwykłe pole = zeszyt ucznia”**.
+</Trick>
+
+## Zadania
+
+<Task id="j1-11-1" title="Przelicznik (metody static)" level="łatwe" minutes={10}>
+Napisz klasę `Przelicznik` z metodami statycznymi `celsjuszNaFahrenheit(double c)` (F = C · 9/5 + 32) i `kmNaMile(double km)` (1 mila = 1,609344 km). Wywołaj je w `main` **bez tworzenia obiektu**: 25 °C to 77.0 °F, 10 km to ok. 6.21 mili.
+
+<Hint>Metody `public static double ...`. Wywołanie: `Przelicznik.celsjuszNaFahrenheit(25)`.</Hint>
+<Hint>Uważaj na `9 / 5`: to dzielenie intów i daje 1. Napisz `9.0 / 5`.</Hint>
+<Solution>
+
+```java title="Main.java" expect="77.0\n6.21"
+class Przelicznik {
+    public static final double KM_W_MILI = 1.609344;
+
+    public static double celsjuszNaFahrenheit(double c) {
+        return c * 9.0 / 5 + 32;          // 9.0, żeby nie było dzielenia całkowitego
+    }
+
+    public static double kmNaMile(double km) {
+        return km / KM_W_MILI;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        System.out.println(Przelicznik.celsjuszNaFahrenheit(25));
+        System.out.printf("%.2f%n", Przelicznik.kmNaMile(10));
+    }
+}
+```
+
+**Dlaczego tak:** przeliczanie nie zależy od żadnego „stanu”, więc nie ma sensu tworzyć obiektu. Tak samo działa `Math`.
+</Solution>
+</Task>
+
+<Task id="j1-11-2" title="Osoba: trzy konstruktory i licznik" level="egzamin" minutes={25}>
+Klasa `Osoba`:
+
+- prywatne pola `id` (int), `imie` (String), prywatne statyczne `liczbaInstancji`,
+- konstruktory: bezparametrowy (id = 0, imie = ""), z parametrami, kopiujący. Każdy zwiększa licznik,
+- metoda `przedstawSie(String doKogo)`: jeśli imię jest puste, wypisuje `Brak danych`, w przeciwnym razie `Cześć Ola, mam na imię Dawid`,
+- statyczny getter licznika.
+
+W `main` wczytaj id i imię z klawiatury, utwórz trzy osoby (każdym konstruktorem), dla każdej wywołaj `przedstawSie("Ola")` i na końcu wypisz liczbę instancji.
+
+<Hint>Każdy z trzech konstruktorów kończy się linijką `liczbaInstancji++;`.</Hint>
+<Hint>Puste imię: `imie.isEmpty()`.</Hint>
+<Hint>Kopiujący konstruktor dostaje `Osoba inna` i przepisuje `inna.id`, `inna.imie`.</Hint>
+<Solution>
+
+```java title="Main.java" stdin="7\nDawid" expect="Brak danych\nCześć Ola, mam na imię Dawid\nCześć Ola, mam na imię Dawid\nLiczba instancji: 3"
+import java.util.Scanner;
+
+class Osoba {
+    private int id;
+    private String imie;
+    private static int liczbaInstancji = 0;
+
+    public Osoba() {
+        id = 0;
+        imie = "";
+        liczbaInstancji++;
+    }
+
+    public Osoba(int id, String imie) {
+        this.id = id;
+        this.imie = imie;
+        liczbaInstancji++;
+    }
+
+    public Osoba(Osoba inna) {
+        this.id = inna.id;
+        this.imie = inna.imie;
+        liczbaInstancji++;
+    }
+
+    public void przedstawSie(String doKogo) {
+        if (imie.isEmpty()) {
+            System.out.println("Brak danych");
+        } else {
+            System.out.println("Cześć " + doKogo + ", mam na imię " + imie);
+        }
+    }
+
+    public static int getLiczbaInstancji() {
+        return liczbaInstancji;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Podaj id: ");
+        int id = sc.nextInt();
+        System.out.print("Podaj imię: ");
+        String imie = sc.next();
+
+        Osoba pusta = new Osoba();
+        Osoba podana = new Osoba(id, imie);
+        Osoba kopia = new Osoba(podana);
+
+        pusta.przedstawSie("Ola");
+        podana.przedstawSie("Ola");
+        kopia.przedstawSie("Ola");
+        System.out.println("Liczba instancji: " + Osoba.getLiczbaInstancji());
+    }
+}
+```
+
+**Dlaczego tak:** tu konstruktory nie delegują przez `this(...)`, więc licznik jest w każdym. Obie wersje są poprawne. Ważne, żeby jeden obiekt = +1.
+</Solution>
+</Task>
+
+<Task id="j1-11-3" title="Kostka do gry (styl arkusza 2026)" level="egzamin" minutes={30}>
+Klasa `Kostka` z polami publicznymi: `wartosc` (int), `dostepna` (boolean) i statycznym `liczbaKostek` (int). Do tego statyczna tablica nazw `{"zero", "jeden", "dwa", "trzy", "cztery", "pięć", "sześć"}`.
+
+- Konstruktor bezparametrowy losuje wartość 1–6.
+- Konstruktor z parametrem przypisuje go, jeśli jest w zakresie 1–6, a w przeciwnym razie 0.
+- Oba ustawiają `dostepna = true` i zwiększają licznik.
+- `rzuc()`: losuje nową wartość **tylko**, gdy kostka jest dostępna.
+- `zablokuj()`: ustawia `dostepna = false`.
+- `slownie()`: zwraca nazwę wartości z tablicy.
+
+W `main`: utwórz kostkę bezparametrowo, potem z parametrem 9. Po każdej wypisz liczbę kostek. Dla obu wypisz wartość i nazwę słownie. Zablokuj pierwszą, rzuć obiema i wypisz wartości ponownie.
+
+<Hint>Losowanie 1–6: `new Random().nextInt(6) + 1` (import `java.util.Random`). Szczegóły w lekcji 1.15.</Hint>
+<Hint>Konstruktor bezparametrowy może delegować: `this(new Random().nextInt(6) + 1);`. Wtedy licznik zwiększasz tylko w konstruktorze z parametrem.</Hint>
+<Hint>`slownie()` to `return NAZWY[wartosc];` i działa, bo wartość 0–6 to zarazem poprawny indeks.</Hint>
+<Solution>
+
+```java title="Main.java" expect="Kostka 2: 0 (zero)"
+import java.util.Random;
+
+class Kostka {
+    public int wartosc;
+    public boolean dostepna;
+    public static int liczbaKostek = 0;
+    private static final String[] NAZWY = {"zero", "jeden", "dwa", "trzy", "cztery", "pięć", "sześć"};
+    private static final Random LOSOWANIE = new Random();     // jeden generator dla wszystkich kostek
+
+    public Kostka(int wartosc) {
+        this.wartosc = (wartosc >= 1 && wartosc <= 6) ? wartosc : 0;
+        dostepna = true;
+        liczbaKostek++;
+    }
+
+    public Kostka() {
+        this(LOSOWANIE.nextInt(6) + 1);      // losuje 1..6 i deleguje
+    }
+
+    public void rzuc() {
+        if (dostepna) {
+            wartosc = LOSOWANIE.nextInt(6) + 1;
+        }
+    }
+
+    public void zablokuj() {
+        dostepna = false;
+    }
+
+    public String slownie() {
+        return NAZWY[wartosc];
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Kostka pierwsza = new Kostka();
+        System.out.println("Liczba kostek: " + Kostka.liczbaKostek);
+        Kostka druga = new Kostka(9);
+        System.out.println("Liczba kostek: " + Kostka.liczbaKostek);
+
+        System.out.println("Kostka 1: " + pierwsza.wartosc + " (" + pierwsza.slownie() + ")");
+        System.out.println("Kostka 2: " + druga.wartosc + " (" + druga.slownie() + ")");
+
+        int przedRzutem = pierwsza.wartosc;
+        pierwsza.zablokuj();
+        pierwsza.rzuc();                         // zablokowana: nic się nie zmieni
+        druga.rzuc();
+        System.out.println("Po rzucie: " + pierwsza.wartosc + " (bez zmian: " + (pierwsza.wartosc == przedRzutem) + "), " + druga.wartosc);
+    }
+}
+```
+
+**Dlaczego tak:** jeden statyczny `Random` dla całej klasy to dobra praktyka. Tworzenie nowego generatora przy każdym rzucie też działa, ale jest marnotrawstwem. W prawdziwym arkuszu do tego doszły nazwy plików graficznych (`kosc0.png`… `kosc6.png`) w tablicy, czyli ten sam trik co z nazwami słownie.
+</Solution>
+</Task>
+
+<Task id="j1-11-4" title="Punkt i konstruktor kopiujący" level="średnie" minutes={15}>
+Klasa `Punkt` (x, y jako double) z konstruktorem z parametrami, kopiującym i bezparametrowym (punkt (0, 0) przez `this(0, 0)`). Metody `przesun(dx, dy)` i `odleglosc(Punkt inny)`. Pokaż, że po przesunięciu kopii oryginał się nie zmienia, i wypisz odległość między nimi.
+
+<Hint>Odległość: `Math.sqrt(dx * dx + dy * dy)`, gdzie dx = różnica x-ów.</Hint>
+<Hint>Kopia przez konstruktor kopiujący to NOWY obiekt (w przeciwieństwie do `Punkt b = a;`).</Hint>
+<Solution>
+
+```java title="Main.java" expect="Oryginał: (1.0, 2.0)\nKopia: (4.0, 6.0)\nOdległość: 5.0"
+class Punkt {
+    private double x;
+    private double y;
+
+    public Punkt(double x, double y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public Punkt() {
+        this(0, 0);
+    }
+
+    public Punkt(Punkt inny) {
+        this(inny.x, inny.y);           // kopiujący też może delegować
+    }
+
+    public void przesun(double dx, double dy) {
+        x += dx;
+        y += dy;
+    }
+
+    public double odleglosc(Punkt inny) {
+        double dx = x - inny.x;
+        double dy = y - inny.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    @Override
+    public String toString() {
+        return "(" + x + ", " + y + ")";
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Punkt oryginal = new Punkt(1, 2);
+        Punkt kopia = new Punkt(oryginal);
+        kopia.przesun(3, 4);
+        System.out.println("Oryginał: " + oryginal);
+        System.out.println("Kopia: " + kopia);
+        System.out.println("Odległość: " + oryginal.odleglosc(kopia));
+    }
+}
+```
+</Solution>
+</Task>

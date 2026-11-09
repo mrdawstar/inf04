@@ -1,0 +1,373 @@
+<Why>
+Walidacja e-maila, kodu pocztowego, numeru PESEL, szyfr Cezara, palindromy: to wszystko operacje na napisach i znakach. W arkuszach z lat 2021–2024 tekst pojawiał się raz po raz, w konsoli i w GUI. Ta lekcja daje ci narzędzia do każdego z tych zadań.
+</Why>
+
+## Teoria krok po kroku
+
+### 1. String to łańcuch znaków
+
+<Analogy>
+Napis to **naszyjnik z koralików**. Każdy koralik to jeden znak (`char`), a koraliki są ponumerowane od zera, dokładnie jak szafki w tablicy. Naszyjnika nie da się przerobić. Jeśli chcesz inny, nawlekasz nowy (String jest **niezmienny**).
+</Analogy>
+
+```java check="body"
+String s = "Kajak";
+char pierwszy = s.charAt(0);      // 'K'
+char ostatni = s.charAt(s.length() - 1);   // 'k'
+int dlugosc = s.length();         // 5: w napisie length() Z NAWIASAMI
+```
+
+### 2. Najważniejsze metody
+
+| Metoda | Co robi | `"Ala ma kota"` → |
+|---|---|---|
+| `length()` | liczba znaków | `11` |
+| `charAt(i)` | znak o indeksie i | `charAt(4)` → `'m'` |
+| `substring(od, do)` | fragment od `od` **do `do` bez niego** | `substring(4, 6)` → `"ma"` |
+| `substring(od)` | od `od` do końca | `substring(7)` → `"kota"` |
+| `indexOf(x)` | pierwsza pozycja x albo **−1** | `indexOf('m')` → `4` |
+| `contains(x)` | czy zawiera | `contains("kot")` → `true` |
+| `equals(x)` | czy treść równa | |
+| `equalsIgnoreCase(x)` | równa bez względu na wielkość liter | |
+| `toUpperCase()` / `toLowerCase()` | wielkie / małe litery | `"ALA MA KOTA"` |
+| `trim()` | usuwa spacje z początku i końca | |
+| `replace(a, b)` | zamienia wszystkie a na b | `replace("a", "o")` → `"Alo mo koto"` |
+| `split(" ")` | dzieli na tablicę napisów | `["Ala", "ma", "kota"]` |
+| `isEmpty()` | czy pusty (`""`) | `false` |
+| `startsWith(x)` / `endsWith(x)` | czy zaczyna / kończy się na | |
+| `toCharArray()` | tablica znaków | |
+
+Metody **nie zmieniają** napisu, tylko zwracają nowy. Dlatego piszesz `s = s.toUpperCase();`, a nie samo `s.toUpperCase();`.
+
+### 3. char to tak naprawdę liczba
+
+Każdy znak ma swój kod (ASCII/Unicode): `'A'` = 65, `'a'` = 97, `'0'` = 48. Litery i cyfry mają **kolejne** kody, więc da się na nich liczyć:
+
+```java check="body" expect="7\nd\n2"
+char cyfra = '7';
+int wartosc = cyfra - '0';          // 55 - 48 = 7: zamiana cyfry-znaku na liczbę
+char litera = (char) ('a' + 3);     // 97 + 3 = 100, czyli 'd'
+int pozycja = 'c' - 'a';            // 2: która to litera alfabetu (liczona od 0)
+System.out.println(wartosc);
+System.out.println(litera);
+System.out.println(pozycja);
+```
+
+To fundament szyfru Cezara (lekcja 2.16) i liczenia sumy kontrolnej PESEL (lekcja 2.18).
+
+Klasa `Character` ma gotowe testy: `Character.isDigit(c)`, `isLetter(c)`, `isUpperCase(c)`, `isLowerCase(c)`, `isWhitespace(c)` oraz zamiany `Character.toUpperCase(c)`.
+
+### 4. Tekst ↔ liczba
+
+```java check="body" expect="124\n4\n42"
+int n = Integer.parseInt("123");          // tekst → int (w Androidzie używasz tego stale!)
+double d = Double.parseDouble("3.5");     // tekst → double
+String s = String.valueOf(42);            // liczba → tekst
+String t = "" + 42;                       // to samo, skrótem
+System.out.println(n + 1);
+System.out.println(s.length() + t.length());
+System.out.println(s);
+```
+
+`Integer.parseInt("abc")` rzuci `NumberFormatException`. W Androidzie to najczęstsza przyczyna „aplikacja przestała działać”, gdy pole tekstowe jest puste.
+
+### 5. StringBuilder: gdy budujesz tekst kawałek po kawałku
+
+```java check="body" expect="kaj\nkotek"
+StringBuilder sb = new StringBuilder();
+sb.append("k").append("a").append("j");     // dopisywanie na końcu
+System.out.println(sb.toString());           // kaj
+String odwrocony = new StringBuilder("ketok").reverse().toString();
+System.out.println(odwrocony);               // kotek
+```
+
+Sklejanie `+` w długiej pętli tworzy za każdym razem nowy napis. `StringBuilder` dopisuje do jednego.
+
+## Wizualizacja
+
+<Trace
+  title="Czy „kajak” to palindrom? (dwa wskaźniki)"
+  code={`String s = "kajak";
+int lewy = 0, prawy = s.length() - 1;
+while (lewy < prawy) {
+    if (s.charAt(lewy) != s.charAt(prawy)) {
+        return false;
+    }
+    lewy++;
+    prawy--;
+}
+return true;`}
+  steps={[
+    { line: 1, vars: { s: ['k', 'a', 'j', 'a', 'k'] }, note: 'Napis jak tablica znaków z indeksami 0–4.' },
+    { line: 2, vars: { s: ['k', 'a', 'j', 'a', 'k'], lewy: 0, prawy: 4 }, hl: { s: 0 }, note: 'Jeden palec na początku, drugi na końcu.' },
+    { line: 4, vars: { s: ['k', 'a', 'j', 'a', 'k'], lewy: 0, prawy: 4 }, hl: { s: 0 }, note: "charAt(0) = 'k', charAt(4) = 'k'. Równe, więc idziemy dalej." },
+    { line: 7, vars: { s: ['k', 'a', 'j', 'a', 'k'], lewy: 1, prawy: 4 }, hl: { s: 1 } },
+    { line: 8, vars: { s: ['k', 'a', 'j', 'a', 'k'], lewy: 1, prawy: 3 }, hl: { s: 1 }, note: 'Palce zbliżają się do środka.' },
+    { line: 4, vars: { s: ['k', 'a', 'j', 'a', 'k'], lewy: 1, prawy: 3 }, hl: { s: 1 }, note: "'a' i 'a': równe." },
+    { line: 8, vars: { s: ['k', 'a', 'j', 'a', 'k'], lewy: 2, prawy: 2 }, hl: { s: 2 }, note: 'Palce spotkały się na środku (j).' },
+    { line: 3, vars: { s: ['k', 'a', 'j', 'a', 'k'], lewy: 2, prawy: 2 }, note: '2 < 2? Nie. Pętla się kończy. Środkowego znaku nie trzeba z niczym porównywać.' },
+    { line: 10, vars: { s: ['k', 'a', 'j', 'a', 'k'] }, note: 'Żadna para się nie różniła, więc to palindrom: true.' },
+  ]}
+/>
+
+## Przykład kodu
+
+```java title="Main.java" stdin="Programista 2027!" expect="Cyfr: 4"
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Wpisz zdanie: ");
+        String zdanie = sc.nextLine();
+
+        int litery = 0, cyfry = 0, wielkie = 0;
+        for (int i = 0; i < zdanie.length(); i++) {      // length() z nawiasami
+            char znak = zdanie.charAt(i);                // i-ty koralik naszyjnika
+            if (Character.isLetter(znak)) {
+                litery++;
+                if (Character.isUpperCase(znak)) {
+                    wielkie++;
+                }
+            } else if (Character.isDigit(znak)) {
+                cyfry++;
+            }
+        }
+
+        System.out.println("Długość: " + zdanie.length());
+        System.out.println("Liter: " + litery + " (wielkich: " + wielkie + ")");
+        System.out.println("Cyfr: " + cyfry);
+        System.out.println("Wielkimi: " + zdanie.toUpperCase());       // nowy napis, oryginał bez zmian
+        System.out.println("Pierwsze słowo: " + zdanie.split(" ")[0]);
+    }
+}
+```
+
+## Najczęstsze błędy
+
+<Mistake title="Wynik metody nigdzie nie trafia">
+`s.toUpperCase();` nie zmienia `s`. Napis jest niezmienny, więc wynik trzeba przypisać: `s = s.toUpperCase();`.
+</Mistake>
+
+<Mistake title="char w cudzysłowie, String w apostrofach">
+`'a'` to znak (`char`), `"a"` to napis (`String`). `s.charAt(0) == "a"` się nie skompiluje. Poprawnie: `s.charAt(0) == 'a'`. Znaki **możesz** porównywać przez `==`, napisy **nie**.
+</Mistake>
+
+<Mistake title="substring o jeden za daleko">
+
+```java check="throws"
+String s = "kot";
+System.out.println(s.substring(1, 4));
+```
+
+`StringIndexOutOfBoundsException`. Drugi argument może być co najwyżej równy `length()`. Pamiętaj: koniec jest **wyłączony**, więc `substring(1, 3)` daje `"ot"`.
+</Mistake>
+
+<Mistake title="Cyfra-znak użyta jako liczba">
+`int suma = '3' + '4';` daje 103 (51 + 52), a nie 7. Najpierw zamień: `('3' - '0') + ('4' - '0')`.
+</Mistake>
+
+<Mistake title="parseInt na pustym tekście">
+`Integer.parseInt("")` albo `Integer.parseInt(" 5")` rzuca `NumberFormatException`. Przed zamianą sprawdź `isEmpty()` i usuń spacje `trim()`. Obsługę wyjątków poznasz w lekcji 1.14.
+</Mistake>
+
+## Trik na zapamiętanie
+
+<Trick title="Nawiasy i dwa wskaźniki">
+**„Tablica prosta, napis pyta, lista liczy”**: `t.length`, `s.length()`, `lista.size()`.
+
+**„Minus zero robi liczbę”**: `c - '0'` zamienia cyfrę-znak na liczbę.
+
+**Dwa wskaźniki** (lewy i prawy palec idą do środka): palindrom, odwracanie, sprawdzanie symetrii.
+
+Szkielet „przejdź po znakach i coś policz”:
+
+```java check="body"
+String s = "tekst";
+int licznik = 0;
+for (int i = 0; i < s.length(); i++) {
+    char c = s.charAt(i);
+    if (c == 't') {          // warunek dla znaku
+        licznik++;
+    }
+}
+```
+</Trick>
+
+## Zadania
+
+<Task id="j1-9-1" title="Samogłoski" level="łatwe" minutes={10}>
+Napisz metodę `static int policzSamogloski(String tekst)`, która liczy samogłoski (a, e, i, o, u, y, ą, ę, ó) bez względu na wielkość liter. Dla `"Ala ma kota"` powinno wyjść 5.
+
+<Hint>Zamień tekst na małe litery, żeby nie sprawdzać osobno A i a.</Hint>
+<Hint>Zapisz samogłoski w napisie `"aeiouyąęó"`. Znak jest samogłoską, gdy `samogloski.indexOf(c) != -1`.</Hint>
+<Solution>
+
+```java title="Main.java" expect="5"
+public class Main {
+    static int policzSamogloski(String tekst) {
+        String samogloski = "aeiouyąęó";
+        String male = tekst.toLowerCase();
+        int licznik = 0;
+        for (int i = 0; i < male.length(); i++) {
+            if (samogloski.indexOf(male.charAt(i)) != -1) {   // znak jest na liście samogłosek
+                licznik++;
+            }
+        }
+        return licznik;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(policzSamogloski("Ala ma kota"));
+    }
+}
+```
+
+**Dlaczego tak:** `indexOf` na napisie-liście zastępuje dziewięć porównań `c == 'a' || c == 'e' || ...`.
+</Solution>
+</Task>
+
+<Task id="j1-9-2" title="Palindrom" level="średnie" minutes={15}>
+Napisz `static boolean czyPalindrom(String s)`, która ignoruje wielkość liter i spacje. `"Kobyła ma mały bok"` to palindrom, `"Programista"` nie.
+
+<Hint>Najpierw oczyść napis: `s.toLowerCase().replace(" ", "")`.</Hint>
+<Hint>Potem dwa wskaźniki jak w wizualizacji albo porównanie z odwróconym przez `StringBuilder`.</Hint>
+<Solution>
+
+```java title="Main.java" expect="true\nfalse"
+public class Main {
+    static boolean czyPalindrom(String s) {
+        String czysty = s.toLowerCase().replace(" ", "");
+        int lewy = 0;
+        int prawy = czysty.length() - 1;
+        while (lewy < prawy) {
+            if (czysty.charAt(lewy) != czysty.charAt(prawy)) {
+                return false;                 // pierwsza różnica przesądza sprawę
+            }
+            lewy++;
+            prawy--;
+        }
+        return true;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(czyPalindrom("Kobyła ma mały bok"));
+        System.out.println(czyPalindrom("Programista"));
+    }
+}
+```
+
+**Wersja krótsza:** `return czysty.equals(new StringBuilder(czysty).reverse().toString());`. Działa tak samo, ale na egzaminie warto umieć obie.
+</Solution>
+</Task>
+
+<Task id="j1-9-3" title="Inicjały i ładne imię" level="średnie" minutes={15}>
+Użytkownik wpisuje imię i nazwisko małymi literami, np. `jan kowalski`. Wypisz je poprawione (`Jan Kowalski`) oraz inicjały (`J.K.`).
+
+<Hint>`split(" ")` rozbije tekst na dwa słowa.</Hint>
+<Hint>Pierwsza litera słowa: `slowo.substring(0, 1).toUpperCase()`. Reszta: `slowo.substring(1)`.</Hint>
+<Hint>Inicjał to `Character.toUpperCase(slowo.charAt(0))`.</Hint>
+<Solution>
+
+```java title="Main.java" stdin="jan kowalski" expect="Jan Kowalski\nJ.K."
+import java.util.Scanner;
+
+public class Main {
+    static String wielkaPierwsza(String slowo) {
+        return slowo.substring(0, 1).toUpperCase() + slowo.substring(1);
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Imię i nazwisko: ");
+        String[] czesci = sc.nextLine().trim().split(" ");
+        String imie = wielkaPierwsza(czesci[0]);
+        String nazwisko = wielkaPierwsza(czesci[1]);
+
+        System.out.println(imie + " " + nazwisko);
+        System.out.println(imie.charAt(0) + "." + nazwisko.charAt(0) + ".");
+    }
+}
+```
+
+**Pułapka:** `imie.charAt(0) + nazwisko.charAt(0)` bez napisu pomiędzy dodałoby dwa kody znaków jak liczby. Tu na szczęście w środku stoi `"."`, więc wszystko się skleja jako tekst.
+</Solution>
+</Task>
+
+<Task id="j1-9-4" title="Walidacja e-maila (arkusz 2021)" level="egzamin" minutes={15}>
+Napisz `static boolean czyPoprawnyEmail(String email)`. Adres uznajemy za poprawny, gdy:
+
+- zawiera dokładnie jeden znak `@`, który nie jest pierwszym ani ostatnim znakiem,
+- po `@` występuje kropka, ale nie zaraz po `@` i nie na samym końcu.
+
+Sprawdź: `dawid@sax.pl` (true), `@sax.pl` (false), `dawid@pl` (false), `da@wid@sax.pl` (false), `dawid@.pl` (false).
+
+<Hint>Pozycja małpy: `int malpa = email.indexOf('@');`. Czy jest jedna? Porównaj z `email.lastIndexOf('@')`.</Hint>
+<Hint>Kropkę szukaj dopiero za małpą: `email.indexOf('.', malpa)` (drugi argument = od której pozycji szukać).</Hint>
+<Hint>Warunki odrzucenia: `malpa <= 0`, `malpa != lastIndexOf`, `kropka == -1`, `kropka == malpa + 1`, `kropka == length() - 1`.</Hint>
+<Solution>
+
+```java title="Main.java" expect="true\nfalse\nfalse\nfalse\nfalse"
+public class Main {
+    static boolean czyPoprawnyEmail(String email) {
+        int malpa = email.indexOf('@');
+        if (malpa <= 0 || malpa != email.lastIndexOf('@')) {
+            return false;                          // brak @, @ na początku albo więcej niż jedna
+        }
+        int kropka = email.indexOf('.', malpa);    // szukam kropki dopiero za @
+        if (kropka == -1 || kropka == malpa + 1 || kropka == email.length() - 1) {
+            return false;
+        }
+        return true;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(czyPoprawnyEmail("dawid@sax.pl"));
+        System.out.println(czyPoprawnyEmail("@sax.pl"));
+        System.out.println(czyPoprawnyEmail("dawid@pl"));
+        System.out.println(czyPoprawnyEmail("da@wid@sax.pl"));
+        System.out.println(czyPoprawnyEmail("dawid@.pl"));
+    }
+}
+```
+
+**Dlaczego tak:** każdy warunek to osobny „strażnik” z `return false`. Jeśli żaden nie zadziała, adres jest dobry. W arkuszu 2021 (mobilna) wystarczyło sprawdzić obecność `@`, ale lepiej mieć zapas.
+</Solution>
+</Task>
+
+<Task id="j1-9-5" title="Kod pocztowy (arkusz 2023)" level="egzamin" minutes={15}>
+Napisz `static boolean czyKodPocztowy(String kod)`: poprawny kod ma format `XX-XXX`, gdzie X to cyfra (np. `05-120`). Sprawdź `05-120` (true), `05120` (false), `0a-120` (false), `05-12` (false).
+
+<Hint>Najpierw długość: musi być dokładnie 6.</Hint>
+<Hint>Znak na indeksie 2 to `'-'`. Pozostałe indeksy (0, 1, 3, 4, 5) muszą być cyframi: `Character.isDigit`.</Hint>
+<Solution>
+
+```java title="Main.java" expect="true\nfalse\nfalse\nfalse"
+public class Main {
+    static boolean czyKodPocztowy(String kod) {
+        if (kod.length() != 6 || kod.charAt(2) != '-') {
+            return false;
+        }
+        for (int i = 0; i < kod.length(); i++) {
+            if (i == 2) {
+                continue;                            // myślnik już sprawdzony
+            }
+            if (!Character.isDigit(kod.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(czyKodPocztowy("05-120"));
+        System.out.println(czyKodPocztowy("05120"));
+        System.out.println(czyKodPocztowy("0a-120"));
+        System.out.println(czyKodPocztowy("05-12"));
+    }
+}
+```
+
+**Dla ambitnych:** to samo w jednej linii wyrażeniem regularnym: `return kod.matches("\\d{2}-\\d{3}");` (`\d` = cyfra, `{2}` = dwa razy).
+</Solution>
+</Task>

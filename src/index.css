@@ -1,0 +1,223 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg: #f6f5f1;
+  --surface: #ffffff;
+  --surface-2: #efede7;
+  --ink: #1a1a1d;
+  --muted: #5c5b62;
+  --line: #e1ded6;
+  --accent: #4338ca;
+  --accent-ink: #ffffff;
+  --accent-soft: #e6e5fb;
+  --good: #15803d;
+  --good-soft: #dcf2e3;
+  --warn: #b45309;
+  --warn-soft: #fbecd9;
+  --bad: #b91c1c;
+  --bad-soft: #fbe3e3;
+  --code-bg: #fbfaf7;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 2px 8px rgb(0 0 0 / 0.04);
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #111214;
+  --surface: #191a1e;
+  --surface-2: #22232a;
+  --ink: #ececf1;
+  --muted: #a1a1ad;
+  --line: #2e2f37;
+  --accent: #a5b4fc;
+  --accent-ink: #14152a;
+  --accent-soft: #262a4d;
+  --good: #4ade80;
+  --good-soft: #15301f;
+  --warn: #fbbf24;
+  --warn-soft: #3a2c10;
+  --bad: #f87171;
+  --bad-soft: #3d1a1a;
+  --code-bg: #15161a;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --font-sans: "Atkinson Hyperlegible Next", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: 72px;
+}
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-tap-highlight-color: transparent;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+button {
+  cursor: pointer;
+}
+
+/* ---------- Treść lekcji (MDX) ---------- */
+.prose-lesson {
+  overflow-wrap: break-word;
+}
+.prose-lesson > * + * {
+  margin-top: 1rem;
+}
+.prose-lesson h2 {
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+  letter-spacing: -0.01em;
+}
+.prose-lesson h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-top: 1.75rem;
+}
+.prose-lesson p {
+  max-width: 68ch;
+}
+.prose-lesson ul,
+.prose-lesson ol {
+  padding-left: 1.4rem;
+  max-width: 68ch;
+}
+.prose-lesson ul {
+  list-style: disc;
+}
+.prose-lesson ol {
+  list-style: decimal;
+}
+.prose-lesson li + li {
+  margin-top: 0.35rem;
+}
+.prose-lesson li::marker {
+  color: var(--muted);
+}
+.prose-lesson a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prose-lesson strong {
+  font-weight: 700;
+}
+.prose-lesson :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 0.05em 0.35em;
+  overflow-wrap: anywhere;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.prose-lesson table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.94rem;
+}
+.prose-lesson .table-wrap {
+  overflow-x: auto;
+}
+.prose-lesson th,
+.prose-lesson td {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.prose-lesson th {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.prose-lesson blockquote {
+  border-left: 3px solid var(--line);
+  padding-left: 1rem;
+  color: var(--muted);
+}
+
+/* ---------- Bloki kodu (Shiki, dwa motywy) ---------- */
+.shiki,
+.shiki span {
+  color: var(--shiki-light);
+}
+.dark .shiki,
+.dark .shiki span {
+  color: var(--shiki-dark);
+}
+.codeblock pre {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  background: var(--code-bg) !important;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  tab-size: 4;
+}
+.codeblock pre code {
+  font-family: inherit;
+}
+
+/* Animacja wejścia elementów odkrywanych */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.reveal {
+  animation: reveal 0.2s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

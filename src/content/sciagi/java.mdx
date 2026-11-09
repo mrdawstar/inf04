@@ -1,0 +1,209 @@
+## Szkielet programu
+
+```java title="Main.java" stdin="5"
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Podaj liczbę: ");
+        int n = sc.nextInt();
+        System.out.println("Wpisano " + n);
+    }
+}
+```
+
+## Typy i zmienne
+
+| Typ | Przykład | Uwagi |
+|---|---|---|
+| `int` | `int ile = 0;` | ±2,1 mld |
+| `long` | `long duza = 5_000_000_000L;` | L na końcu |
+| `double` | `double cena = 4.40;` | ułamki |
+| `boolean` | `boolean ok = true;` | true / false |
+| `char` | `char c = 'a';` | apostrofy |
+| `String` | `String s = "tekst";` | cudzysłowy, `equals` |
+| stała | `final int MAX = 6;` | WIELKIE_LITERY |
+| rzutowanie | `(int) 7.9` → 7, `(double) a / b` | obcina, nie zaokrągla |
+
+**int / int obcina:** `7 / 2` = 3, `7 / 2.0` = 3.5, `7 % 2` = 1.
+
+## Operatory
+
+| Grupa | Operatory |
+|---|---|
+| arytmetyczne | `+ - * / %` |
+| przypisania | `= += -= *= /= %= ++ --` |
+| porównania | `== != < <= > >=` |
+| logiczne | `&&` (i), <code>&#124;&#124;</code> (lub), `!` (nie) |
+| warunkowy | `warunek ? tak : nie` |
+
+## Wejście i wyjście
+
+| Kod | Co robi |
+|---|---|
+| `sc.nextInt()` / `nextDouble()` | liczba |
+| `sc.next()` | jedno słowo |
+| `sc.nextLine()` | cała linia (po `nextInt` najpierw puste `sc.nextLine();`) |
+| `sc.hasNextInt()` | czy czeka liczba |
+| `printf("%d %.2f %s%n", i, d, s)` | formatowanie |
+| `String.format(...)` | to samo, ale zwraca napis |
+| `sc.useLocale(Locale.US)` | liczby z kropką zamiast przecinka |
+
+## Warunki
+
+```java check="body"
+int x = 5;
+if (x > 0) {
+    System.out.println("dodatnia");
+} else if (x < 0) {
+    System.out.println("ujemna");
+} else {
+    System.out.println("zero");
+}
+
+String nazwa = switch (x) {
+    case 1, 2 -> "mało";
+    case 5 -> "pięć";
+    default -> "inna";
+};
+```
+
+## Pętle
+
+```java check="body"
+int n = 5;
+for (int i = 0; i < n; i++) { }          // znana liczba powtórzeń
+while (n > 0) { n--; }                    // dopóki warunek
+int odp;
+do {
+    odp = 3;                              // co najmniej raz (walidacja danych)
+} while (odp < 1 || odp > 6);
+int[] t = {1, 2, 3};
+for (int x : t) { }                       // for-each: tylko odczyt
+// break: wyjście z pętli, continue: następny obrót
+```
+
+## Tablice
+
+```java check="body"
+int[] t = new int[10];                  // 10 zer, indeksy 0..9
+int[] u = {4, 8, 15};
+int ile = t.length;                     // BEZ nawiasów
+int ostatni = u[u.length - 1];
+int[][] m = new int[3][4];              // m[wiersz][kolumna]
+System.out.println(Arrays.toString(u)); // [4, 8, 15]
+Arrays.sort(u);                         // sortowanie gotowcem (na egzaminie zwykle zakazane w algorytmie)
+int[] ileRazy = new int[7];             // tablica liczników: ileRazy[oczka]++
+```
+
+## String i char
+
+| Kod | Wynik dla `s = "Kajak"` |
+|---|---|
+| `s.length()` | 5 (z nawiasami) |
+| `s.charAt(0)` | `'K'` |
+| `s.substring(1, 3)` | `"aj"` (koniec wyłączony) |
+| `s.indexOf('j')` | 2 (albo −1) |
+| `s.toLowerCase()` | `"kajak"` (nowy napis!) |
+| `s.equals("Kajak")` | true (nigdy `==`) |
+| `s.split(" ")` | tablica słów |
+| `s.contains("aj")` | true |
+| `c - '0'` | cyfra-znak → liczba |
+| `(char) ('a' + 2)` | `'c'` |
+| `Integer.parseInt("12")` | 12 |
+| `String.valueOf(12)` | `"12"` |
+| `Character.isDigit(c)` | czy cyfra |
+| `new StringBuilder(s).reverse().toString()` | `"kajaK"` |
+
+## Metody
+
+```java check="class"
+/** Zwraca sumę elementów tablicy. */
+static int suma(int[] liczby) {         // static, gdy wołasz z main
+    int wynik = 0;
+    for (int x : liczby) {
+        wynik += x;
+    }
+    return wynik;
+}
+
+static boolean czyParzysta(int n) {
+    return n % 2 == 0;
+}
+
+static void wypisz(String tekst) {      // void = nic nie zwraca
+    System.out.println(tekst);
+}
+```
+
+## Klasa
+
+```java check="types"
+class Kostka {
+    private int wartosc;                       // pole (prywatne)
+    private static int liczbaKostek = 0;       // wspólne dla wszystkich
+
+    public Kostka() {                          // konstruktor bezparametrowy
+        this(1);
+    }
+
+    public Kostka(int wartosc) {               // z parametrem
+        this.wartosc = wartosc;
+        liczbaKostek++;
+    }
+
+    public Kostka(Kostka inna) {               // kopiujący
+        this(inna.wartosc);
+    }
+
+    public int getWartosc() { return wartosc; }
+    public static int getLiczbaKostek() { return liczbaKostek; }
+
+    @Override
+    public String toString() { return "Kostka: " + wartosc; }
+}
+
+class ZlotaKostka extends Kostka {             // dziedziczenie
+    public ZlotaKostka() { super(6); }         // super: konstruktor rodzica
+}
+```
+
+## Kolekcje
+
+```java check="body"
+ArrayList<Integer> lista = new ArrayList<>();
+lista.add(5);                 // dodaj
+int pierwszy = lista.get(0);  // odczyt
+lista.set(0, 7);              // zamiana
+lista.remove(0);              // usuń po indeksie
+int rozmiar = lista.size();   // rozmiar
+boolean jest = lista.contains(7);
+Collections.sort(lista);
+
+HashMap<String, Integer> mapa = new HashMap<>();
+mapa.put("kot", mapa.getOrDefault("kot", 0) + 1);   // zliczanie
+```
+
+## Wyjątki
+
+```java check="body"
+try {
+    int n = Integer.parseInt("12a");
+} catch (NumberFormatException e) {
+    System.out.println("To nie liczba: " + e.getMessage());
+} finally {
+    System.out.println("zawsze");
+}
+```
+
+## Losowanie i Math
+
+| Kod | Co daje |
+|---|---|
+| `new Random().nextInt(6) + 1` | kostka 1–6 |
+| `r.nextInt(max - min + 1) + min` | zakres [min, max] |
+| `t[r.nextInt(t.length)]` | losowy element |
+| `Math.max(a, b)`, `Math.abs(x)` | większa, moduł |
+| `Math.pow(a, b)`, `Math.sqrt(x)` | potęga, pierwiastek (double) |
+| `Math.round(x * 100) / 100.0` | 2 miejsca po przecinku |

@@ -1,0 +1,260 @@
+<Why>
+Każdy program na egzaminie zaczyna się od tego samego szkieletu. Kiedy zrozumiesz, co znaczy każde słowo w `public static void main`, przestaniesz go przepisywać na pamięć jak zaklęcie i przestaniesz gubić klamry.
+</Why>
+
+## Teoria krok po kroku
+
+### 1. Program to przepis
+
+Program to lista instrukcji, które komputer wykonuje **po kolei, od góry do dołu**. Nie zgaduje, nie domyśla się, nie poprawia literówek. Robi dokładnie to, co napisałeś.
+
+<Analogy>
+Program jest jak przepis na naleśniki dla robota kuchennego. Jeśli napiszesz „wlej mleko” przed „weź miskę”, robot wyleje mleko na blat. Kolejność instrukcji ma znaczenie.
+</Analogy>
+
+### 2. Od pliku do działającego programu
+
+1. Piszesz **kod źródłowy** w pliku `Main.java`.
+2. **Kompilator** `javac` sprawdza składnię i tłumaczy kod na **kod bajtowy** (plik `Main.class`).
+3. **Maszyna wirtualna Javy (JVM)** wykonuje kod bajtowy na twoim komputerze.
+
+<Analogy>
+Piszesz przepis po polsku (kod źródłowy). Tłumacz (kompilator) przekłada go na uniwersalny język kuchni (kod bajtowy). Kucharz w każdym kraju (JVM na Windows, Linuksie czy macOS) potrafi z niego ugotować. Dlatego mówi się, że Java działa wszędzie.
+</Analogy>
+
+W IntelliJ IDEA i Android Studio nie wpisujesz tych poleceń ręcznie. Klikasz zielony trójkąt albo `Shift+F10`, a środowisko samo kompiluje i uruchamia.
+
+### 3. Szkielet programu
+
+Każde słowo ma swoją rolę:
+
+| Fragment | Co znaczy |
+|---|---|
+| `public class Main` | Tworzysz klasę o nazwie `Main`. Klasa to „pudełko” na kod. Plik musi się nazywać `Main.java`. |
+| `public` | Dostępne z zewnątrz. JVM musi móc „zobaczyć” `main`. |
+| `static` | Metoda należy do klasy, nie do obiektu. JVM może ją wywołać bez tworzenia obiektu. |
+| `void` | Metoda niczego nie zwraca. |
+| `main` | Nazwa, której JVM szuka na starcie. Tu program się zaczyna. |
+| `String[] args` | Argumenty z wiersza poleceń. Na egzaminie z nich nie korzystasz, ale muszą być. |
+| `{ }` | Klamry otwierają i zamykają blok. Każda otwarta musi zostać zamknięta. |
+| `;` | Średnik kończy każdą instrukcję. |
+
+### 4. Wypisywanie na ekran
+
+- `System.out.println("tekst");` wypisuje tekst i **przechodzi do nowej linii**.
+- `System.out.print("tekst");` wypisuje tekst i **zostaje w tej samej linii**.
+- Tekst w cudzysłowach `"..."` to napis. Liczby piszesz bez cudzysłowów: `System.out.println(5 + 3);` wypisze `8`.
+
+### 5. Komentarze
+
+Komentarz to notatka dla człowieka. Kompilator ją pomija.
+
+- `// komentarz do końca linii`
+- `/* komentarz na wiele linii */`
+- `/** komentarz dokumentacyjny */` (z niego zrobisz nagłówek funkcji wymagany na egzaminie)
+
+### 6. Pierwszy projekt w IntelliJ IDEA
+
+1. **New Project** → język **Java** → wybierz JDK → zaznacz „Add sample code” → **Create**.
+2. Otwórz `src/Main.java`.
+3. Uruchom: zielony trójkąt przy `main` albo `Shift+F10`. Wynik pojawi się w oknie **Run** na dole.
+
+## Wizualizacja
+
+Kliknij „Dalej” i zobacz, jak JVM wykonuje program linijka po linijce. Strzałka ▶ pokazuje bieżącą instrukcję.
+
+<Trace
+  code={`public class Main {
+    public static void main(String[] args) {
+        System.out.print("Cześć, ");
+        System.out.println("INF.04!");
+        System.out.println(2 + 3);
+    }
+}`}
+  steps={[
+    { line: 2, note: 'JVM szuka metody main i zaczyna od niej. Wszystko, co jest wyżej, to tylko „opakowanie”.' },
+    { line: 3, out: 'Cześć, ', note: 'print wypisuje tekst i kursor zostaje w tej samej linii.' },
+    { line: 4, out: 'INF.04!\n', note: 'println dopisuje tekst w tej samej linii, a potem przechodzi do nowej.' },
+    { line: 5, out: '5\n', note: 'Bez cudzysłowów 2 + 3 to działanie matematyczne. Wypisze się wynik, czyli 5.' },
+    { line: 6, note: 'Koniec metody main oznacza koniec programu.' },
+  ]}
+/>
+
+## Przykład kodu
+
+```java title="Main.java" expect="Cześć, INF.04!"
+// Plik musi nazywać się tak samo jak klasa publiczna: Main.java
+public class Main {                                  // początek klasy Main
+
+    // Punkt startowy programu: JVM zaczyna wykonywanie dokładnie tutaj
+    public static void main(String[] args) {
+        System.out.print("Cześć, ");                 // print: bez przejścia do nowej linii
+        System.out.println("INF.04!");               // println: wypisze i przejdzie do nowej linii
+        System.out.println("2 + 3 = " + (2 + 3));    // nawias wymusza najpierw dodawanie liczb
+        System.out.println("2 + 3 = " + 2 + 3);      // bez nawiasu: doklejanie tekstu, wyjdzie "23"
+    }                                                // koniec main
+
+}                                                    // koniec klasy
+```
+
+Wynik:
+
+```text
+Cześć, INF.04!
+2 + 3 = 5
+2 + 3 = 23
+```
+
+Ostatnia linia to klasyczna pułapka. `"tekst" + 2` daje napis `"tekst2"`, a potem `+ 3` dokleja kolejną cyfrę. Jeśli chcesz wynik dodawania, weź działanie w nawias.
+
+## Najczęstsze błędy
+
+<Mistake title="Brak średnika">
+
+```java check="error"
+System.out.println("Cześć")
+```
+
+Kompilator zgłosi `';' expected`. Każda instrukcja kończy się średnikiem. Za to po `{` i `}` średnika nie stawiasz.
+</Mistake>
+
+<Mistake title="Mała litera w System">
+
+```java check="error"
+system.out.println("Cześć");
+```
+
+Java rozróżnia wielkość liter. `system` to dla niej zupełnie inne słowo niż `System`, więc dostaniesz `package system does not exist`.
+</Mistake>
+
+<Mistake title="Pojedyncze cudzysłowy wokół tekstu">
+
+```java check="error"
+System.out.println('Cześć');
+```
+
+Apostrofy `'a'` służą do **jednego znaku** (typ `char`). Tekst zawsze bierzesz w cudzysłów `"..."`.
+</Mistake>
+
+<Mistake title="Zgubiona klamra">
+Przy każdej `{` od razu postaw `}`, a dopiero potem wpisuj środek. IntelliJ robi to sam. Jeśli zobaczysz `reached end of file while parsing`, brakuje zamykającej klamry. Wciśnij `Ctrl+Alt+L` (formatowanie): źle ułożone wcięcia od razu pokażą, gdzie blok się nie domyka.
+</Mistake>
+
+<Mistake title="Inna nazwa pliku niż klasy">
+`public class Program` w pliku `Main.java` daje błąd `class Program is public, should be declared in a file named Program.java`. Zmieniasz nazwę klasy? Użyj `Shift+F6` (Refactor → Rename), a IntelliJ zmieni też nazwę pliku.
+</Mistake>
+
+## Trik na zapamiętanie
+
+<Trick title="Szkielet w 3 sekundy">
+**Klasa to dom, `main` to drzwi wejściowe.** JVM zawsze wchodzi przez drzwi o nazwie `main`.
+
+W IntelliJ i Android Studio nie piszesz szkieletu ręcznie:
+- `psvm` (albo `main`) + `Tab` tworzy całą metodę `main`,
+- `sout` + `Tab` wpisuje `System.out.println();`,
+- `souf` + `Tab` wpisuje `System.out.printf("");`.
+
+Mimo to raz dziennie napisz szkielet z pamięci na kartce. Na egzaminie nie będziesz się zastanawiać, gdzie jest `static`.
+</Trick>
+
+## Zadania
+
+<Task id="j1-1-1" title="Wizytówka" level="łatwe" minutes={5}>
+Napisz program, który wypisze w trzech osobnych liniach: twoje imię, nazwę szkoły i ulubiony instrument.
+
+<Hint>Potrzebujesz trzech instrukcji, które przechodzą do nowej linii.</Hint>
+<Hint>`System.out.println("...");` trzy razy. Nie zapomnij o średnikach.</Hint>
+<Solution>
+
+```java title="Main.java"
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Dawid");             // linia 1
+        System.out.println("Technikum nr 1");    // linia 2
+        System.out.println("saksofon");          // linia 3
+    }
+}
+```
+
+**Dlaczego tak:** każde `println` kończy linię, więc trzy wywołania dają trzy linie.
+</Solution>
+</Task>
+
+<Task id="j1-1-2" title="Jedna linia z trzech kawałków" level="łatwe" minutes={5}>
+Używając **trzech** instrukcji, wypisz w jednej linii `Ala ma kota`, a w następnej linii `Koniec`.
+
+<Hint>Które polecenie nie przechodzi do nowej linii?</Hint>
+<Hint>Dwa razy `print`, a za trzecim razem `println`. Uważaj na spacje: muszą być wewnątrz cudzysłowów.</Hint>
+<Hint>`Koniec` wypisze się w nowej linii, jeśli trzeci kawałek zakończysz `println`.</Hint>
+<Solution>
+
+```java title="Main.java" expect="Ala ma kota\nKoniec"
+public class Main {
+    public static void main(String[] args) {
+        System.out.print("Ala ");            // spacja na końcu, w cudzysłowie
+        System.out.print("ma ");
+        System.out.println("kota");          // println kończy linię
+        System.out.println("Koniec");
+    }
+}
+```
+
+**Dlaczego tak:** spacja poza cudzysłowem jest ignorowana. Do napisu trafia tylko to, co jest w `"..."`.
+</Solution>
+</Task>
+
+<Task id="j1-1-3" title="Znajdź 4 błędy" level="średnie" minutes={10}>
+Ten program się nie kompiluje. Znajdź i popraw **cztery** błędy, nie uruchamiając go.
+
+```java check="error"
+public class main {
+    public static void Main(String[] args) {
+        System.out.println("Start")
+        system.out.println('Koniec');
+    }
+}
+```
+
+<Hint>Dwa błędy dotyczą wielkości liter, jeden znaku na końcu linii, jeden cudzysłowów.</Hint>
+<Hint>Sprawdź linie 3 i 4 znak po znaku. Wielkość liter: `System`, `main`.</Hint>
+<Hint>Nazwa klasy: plik nazywa się `Main.java`, więc i klasa musi się tak nazywać.</Hint>
+<Solution>
+
+```java title="Main.java"
+public class Main {                                  // 1. Main z wielkiej litery, jak plik
+    public static void main(String[] args) {         // 2. main z małej: tylko tę nazwę zna JVM
+        System.out.println("Start");                 // 3. brakujący średnik
+        System.out.println("Koniec");                // 4. System wielką literą i "..." zamiast '...'
+    }
+}
+```
+
+**Uwaga:** `public static void Main` skompiluje się, ale program nie wystartuje. JVM szuka dokładnie `main` i zgłosi, że go nie znalazła. To błąd, którego kompilator nie złapie.
+</Solution>
+</Task>
+
+<Task id="j1-1-4" title="Nagłówek jak na egzaminie" level="egzamin" minutes={10}>
+Na egzaminie nad wybraną funkcją wstawiasz komentarz według wzoru z arkusza. Dodaj nad metodą `main` komentarz z polami: **nazwa funkcji, opis funkcji, parametry, zwracany typ i opis, autor**. W polu autor wpisz `00000000000` (na egzaminie będzie tam twój numer zdającego).
+
+<Hint>Użyj komentarza wielolinijkowego `/* ... */` albo dokumentacyjnego `/** ... */`.</Hint>
+<Hint>`main` przyjmuje `String[] args` i niczego nie zwraca (`void`). Te dwie informacje wpisz w pola „parametry” i „zwracany typ”.</Hint>
+<Solution>
+
+```java title="Main.java"
+public class Main {
+    /****************************************************
+     * nazwa funkcji: main
+     * opis funkcji: punkt startowy programu, wypisuje powitanie
+     * parametry: args - argumenty wiersza poleceń (nieużywane)
+     * zwracany typ i opis: brak (void)
+     * autor: 00000000000
+     ****************************************************/
+    public static void main(String[] args) {
+        System.out.println("Cześć, INF.04!");
+    }
+}
+```
+
+**Dlaczego tak:** egzaminator sprawdza, czy są wszystkie pola i czy opis pasuje do funkcji. Liczba gwiazdek nie ma znaczenia. Dokładny wzór zawsze jest w treści arkusza, więc przepisz go stamtąd, a nie z pamięci.
+</Solution>
+</Task>

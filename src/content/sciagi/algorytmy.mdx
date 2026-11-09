@@ -1,0 +1,280 @@
+<Note title="Jak używać tej ściągi">
+Każdy szkielet to samodzielna metoda. Nie ucz się ich na pamięć znak po znaku. Zapamiętaj **ideę** (komentarz w pierwszej linii) i odtwarzaj kod z niej. Pełne lekcje z animacjami są w dziale 2.
+</Note>
+
+## Nagłówek dokumentacji (wzór z arkuszy)
+
+```java check="class"
+/****************************************************
+ * nazwa funkcji: policzSume
+ * opis funkcji: zwraca sumę elementów tablicy
+ * parametry: liczby - tablica liczb całkowitych
+ * zwracany typ i opis: int - suma elementów
+ * autor: 00000000000
+ ****************************************************/
+static int policzSume(int[] liczby) {
+    int suma = 0;
+    for (int x : liczby) suma += x;
+    return suma;
+}
+```
+
+Dokładny wzór zawsze przepisz z treści arkusza.
+
+## Maksimum i jego indeks
+
+```java check="class"
+// idea: zakładam, że pierwszy wygrywa, i podmieniam, gdy znajdę lepszego
+static int indeksMax(int[] t) {
+    int iMax = 0;
+    for (int i = 1; i < t.length; i++) {
+        if (t[i] > t[iMax]) iMax = i;
+    }
+    return iMax;
+}
+```
+
+## Zliczanie wystąpień (tablica liczników)
+
+```java check="class"
+// idea: wartość jest indeksem licznika
+static int[] zlicz(int[] rzuty, int maksWartosc) {
+    int[] ile = new int[maksWartosc + 1];
+    for (int r : rzuty) ile[r]++;
+    return ile;
+}
+```
+
+## Losowanie bez powtórzeń
+
+```java check="class"
+// idea: losuj, dopóki lista nie jest pełna; dodawaj tylko nowe
+static ArrayList<Integer> losujBezPowtorzen(int ile, int min, int max) {
+    Random r = new Random();
+    ArrayList<Integer> wynik = new ArrayList<>();
+    while (wynik.size() < ile) {
+        int los = r.nextInt(max - min + 1) + min;
+        if (!wynik.contains(los)) wynik.add(los);
+    }
+    return wynik;
+}
+```
+
+## Wyszukiwanie liniowe
+
+```java check="class"
+// idea: sprawdzaj po kolei; zwróć indeks albo -1
+static int szukajLiniowo(int[] t, int x) {
+    for (int i = 0; i < t.length; i++) {
+        if (t[i] == x) return i;
+    }
+    return -1;
+}
+```
+
+## Wyszukiwanie z wartownikiem
+
+```java check="class"
+// idea: dopisz x na końcu (tablica ma n+1 miejsc), więc pętla nie musi pilnować zakresu
+static int szukajZWartownikiem(int[] t, int n, int x) {
+    t[n] = x;                       // wartownik
+    int i = 0;
+    while (t[i] != x) i++;
+    return i < n ? i : -1;          // zatrzymał nas wartownik = nie znaleziono
+}
+```
+
+## Wyszukiwanie binarne (tablica posortowana!)
+
+```java check="class"
+// idea: patrz na środek i odrzucaj połowę
+static int szukajBinarnie(int[] t, int x) {
+    int lewy = 0, prawy = t.length - 1;
+    while (lewy <= prawy) {
+        int srodek = (lewy + prawy) / 2;
+        if (t[srodek] == x) return srodek;
+        if (t[srodek] < x) lewy = srodek + 1;
+        else prawy = srodek - 1;
+    }
+    return -1;
+}
+```
+
+## Sortowanie bąbelkowe
+
+```java check="class"
+// idea: porównuj sąsiadów i zamieniaj; największy „wypływa” na koniec
+static void sortujBabelkowo(int[] t) {
+    for (int i = 0; i < t.length - 1; i++) {
+        for (int j = 0; j < t.length - 1 - i; j++) {
+            if (t[j] > t[j + 1]) {              // < dla malejącego
+                int tmp = t[j];
+                t[j] = t[j + 1];
+                t[j + 1] = tmp;
+            }
+        }
+    }
+}
+```
+
+## Sortowanie przez wybieranie
+
+```java check="class"
+// idea: znajdź minimum w reszcie tablicy i postaw je na pozycji i
+static void sortujWybieraniem(int[] t) {
+    for (int i = 0; i < t.length - 1; i++) {
+        int iMin = i;
+        for (int j = i + 1; j < t.length; j++) {
+            if (t[j] < t[iMin]) iMin = j;       // > dla malejącego
+        }
+        int tmp = t[i];
+        t[i] = t[iMin];
+        t[iMin] = tmp;
+    }
+}
+```
+
+## Sortowanie przez wstawianie
+
+```java check="class"
+// idea: jak karty w ręce; bierz kolejną i wsuwaj w lewo na właściwe miejsce
+static void sortujWstawianiem(int[] t) {
+    for (int i = 1; i < t.length; i++) {
+        int klucz = t[i];
+        int j = i - 1;
+        while (j >= 0 && t[j] > klucz) {
+            t[j + 1] = t[j];                    // przesuń większy w prawo
+            j--;
+        }
+        t[j + 1] = klucz;
+    }
+}
+```
+
+## NWD (Euklides) i NWW
+
+```java check="class"
+// idea: nwd(a, b) = nwd(b, a % b), aż b == 0
+static int nwd(int a, int b) {
+    while (b != 0) {
+        int reszta = a % b;
+        a = b;
+        b = reszta;
+    }
+    return a;
+}
+
+static int nwdRekurencyjnie(int a, int b) {
+    return b == 0 ? a : nwdRekurencyjnie(b, a % b);
+}
+
+static int nww(int a, int b) {
+    return a / nwd(a, b) * b;
+}
+```
+
+## Liczba pierwsza i sito Eratostenesa
+
+```java check="class"
+// idea: szukaj dzielnika do pierwiastka
+static boolean czyPierwsza(int n) {
+    if (n < 2) return false;
+    for (int d = 2; d * d <= n; d++) {
+        if (n % d == 0) return false;
+    }
+    return true;
+}
+
+// idea: wykreślaj wielokrotności kolejnych liczb pierwszych
+static boolean[] sito(int n) {
+    boolean[] pierwsza = new boolean[n + 1];
+    Arrays.fill(pierwsza, true);
+    pierwsza[0] = false;
+    if (n >= 1) pierwsza[1] = false;
+    for (int i = 2; i * i <= n; i++) {
+        if (pierwsza[i]) {
+            for (int j = i * i; j <= n; j += i) pierwsza[j] = false;
+        }
+    }
+    return pierwsza;
+}
+```
+
+## Silnia i Fibonacci
+
+```java check="class"
+static long silnia(int n) {                 // iteracyjnie
+    long wynik = 1;
+    for (int i = 2; i <= n; i++) wynik *= i;
+    return wynik;
+}
+
+static long silniaRek(int n) {              // rekurencyjnie: warunek stopu!
+    return n <= 1 ? 1 : n * silniaRek(n - 1);
+}
+
+static long fibonacci(int n) {              // iteracyjnie: F(0)=0, F(1)=1
+    long a = 0, b = 1;
+    for (int i = 0; i < n; i++) {
+        long nastepny = a + b;
+        a = b;
+        b = nastepny;
+    }
+    return a;
+}
+
+static long fibRek(int n) {                 // rekurencyjnie (wolne dla dużych n)
+    return n < 2 ? n : fibRek(n - 1) + fibRek(n - 2);
+}
+```
+
+## Palindrom i szyfr Cezara
+
+```java check="class"
+static boolean czyPalindrom(String s) {
+    int l = 0, p = s.length() - 1;
+    while (l < p) {
+        if (s.charAt(l++) != s.charAt(p--)) return false;
+    }
+    return true;
+}
+
+// idea: przesuń literę o klucz z zawinięciem (% 26)
+static String cezar(String tekst, int klucz) {
+    klucz = ((klucz % 26) + 26) % 26;
+    StringBuilder wynik = new StringBuilder();
+    for (char c : tekst.toCharArray()) {
+        if (c >= 'a' && c <= 'z') wynik.append((char) ('a' + (c - 'a' + klucz) % 26));
+        else if (c >= 'A' && c <= 'Z') wynik.append((char) ('A' + (c - 'A' + klucz) % 26));
+        else wynik.append(c);
+    }
+    return wynik.toString();
+}
+```
+
+## Systemy liczbowe
+
+```java check="class"
+// dziesiętny -> dowolny (2..16): dziel przez podstawę, zbieraj reszty od końca
+static String zDziesietnego(int n, int podstawa) {
+    if (n == 0) return "0";
+    String cyfry = "0123456789ABCDEF";
+    StringBuilder wynik = new StringBuilder();
+    while (n > 0) {
+        wynik.append(cyfry.charAt(n % podstawa));
+        n /= podstawa;
+    }
+    return wynik.reverse().toString();
+}
+
+// dowolny -> dziesiętny (schemat Hornera): wynik = wynik * podstawa + cyfra
+static int naDziesietny(String liczba, int podstawa) {
+    int wynik = 0;
+    for (char c : liczba.toUpperCase().toCharArray()) {
+        wynik = wynik * podstawa + "0123456789ABCDEF".indexOf(c);
+    }
+    return wynik;
+}
+```
+
+Gotowce Javy (dobre do sprawdzenia wyniku): `Integer.toBinaryString(n)`, `Integer.toHexString(n)`, `Integer.parseInt("1011", 2)`.

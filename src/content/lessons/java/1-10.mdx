@@ -1,0 +1,393 @@
+<Why>
+Arkusze 2021, 2025 i 2026 zaczynały się od zdania „napisz klasę…”: klasa z tablicą jako polem, klasa `Kosc` z polami i metodami. Programowanie obiektowe to też połowa pytań teoretycznych. A w Androidzie wszystko jest obiektem: przycisk, pole tekstowe, cały ekran.
+</Why>
+
+## Teoria krok po kroku
+
+### 1. Klasa to projekt, obiekt to rzecz
+
+<Analogy>
+**Klasa** to foremka do pierniczków w kształcie gwiazdki. **Obiekt** to konkretny pierniczek. Jedną foremką zrobisz ich setki. Każdy ma ten sam kształt (te same pola i metody), ale może mieć inną polewę (inne wartości pól). Zjedzenie jednego pierniczka nie zmienia pozostałych.
+</Analogy>
+
+Klasa opisuje:
+- **pola**: co obiekt **wie** (stan), np. `imie`, `wiek`,
+- **metody**: co obiekt **umie** (zachowanie), np. `przedstawSie()`, `urodziny()`.
+
+```java check="types"
+class Pies {
+    String imie;            // pole
+    int wiek;               // pole
+
+    void szczekaj() {       // metoda: zwróć uwagę, BEZ static
+        System.out.println(imie + ": Hau!");
+    }
+}
+```
+
+### 2. Tworzenie obiektu i dostęp kropką
+
+```java check="body" expect="Burek: Hau!"
+class Pies {
+    String imie;
+    void szczekaj() { System.out.println(imie + ": Hau!"); }
+}
+Pies burek = new Pies();     // new tworzy obiekt w pamięci, burek trzyma jego adres
+burek.imie = "Burek";        // kropka = „wejdź do środka tego obiektu”
+burek.szczekaj();            // metoda działa na polach TEGO obiektu
+```
+
+Metody obiektu piszesz **bez `static`**. `static` znaczy „należy do klasy, nie do konkretnego obiektu”. Tę różnicę wyjaśnia lekcja 1.11.
+
+### 3. Konstruktor (w skrócie)
+
+Zamiast ustawiać każde pole po kolei, przekazujesz wartości od razu przy tworzeniu. Konstruktor ma **nazwę klasy** i **nie ma typu zwracanego**:
+
+```java check="types"
+class Pies {
+    String imie;
+    int wiek;
+
+    Pies(String imie, int wiek) {   // konstruktor
+        this.imie = imie;           // this.imie = pole obiektu, imie = parametr
+        this.wiek = wiek;
+    }
+}
+```
+
+Teraz piszesz `Pies burek = new Pies("Burek", 3);`. Różne rodzaje konstruktorów poznasz w następnej lekcji.
+
+`this` znaczy „ten obiekt, na którym właśnie działam”. Potrzebujesz go, gdy parametr nazywa się tak samo jak pole.
+
+### 4. Hermetyzacja: private i gettery/settery
+
+Gdyby pole `wiek` było dostępne dla każdego, ktoś mógłby wpisać `burek.wiek = -50;`. Dlatego pola robi się **prywatne**, a dostęp daje się przez metody, które mogą sprawdzić dane:
+
+| Modyfikator | Kto widzi |
+|---|---|
+| `private` | tylko kod wewnątrz tej klasy |
+| (brak) | klasy z tego samego pakietu |
+| `protected` | pakiet + klasy dziedziczące (lekcja 1.12) |
+| `public` | wszyscy |
+
+<ExamTip>
+Arkusz ze stycznia 2026 kazał zrobić pola **publiczne**. Jeśli treść mówi, jakie mają być pola, rób **dokładnie tak**, bo to jest kryterium. Gdy treść nic nie mówi, wybieraj `private` + gettery i settery.
+</ExamTip>
+
+<Analogy>
+Bankomat. Nie sięgasz ręką do sejfu (`private double saldo`). Korzystasz z okienka (`wyplac(kwota)`), które sprawdzi, czy masz dość pieniędzy.
+</Analogy>
+
+### 5. toString
+
+Metoda `toString()` decyduje, co się wypisze w `System.out.println(obiekt)`. Bez niej zobaczysz `Pies@1b6d3586`. Adnotacja `@Override` mówi: „nadpisuję metodę, którą każda klasa dostaje w spadku” (więcej w lekcji 1.12).
+
+### 6. Zmienna obiektowa to pilot, nie telewizor
+
+<Analogy>
+Zmienna `burek` nie jest psem. To **smycz** przypięta do psa. `Pies drugi = burek;` daje drugą smycz do **tego samego** psa. Jeśli przez drugą smycz nakarmisz psa, przez pierwszą też będzie najedzony.
+</Analogy>
+
+- `==` na obiektach sprawdza, czy to **ten sam** obiekt (te same smycze), a nie czy obiekty mają takie same pola.
+- `null` oznacza „smycz bez psa”. Wywołanie metody na `null` kończy się `NullPointerException`.
+
+### 7. Gdzie pisać klasy
+
+- W jednym pliku może być wiele klas, ale **tylko jedna** `public`, nazwana jak plik. Na egzaminie to najszybsze rozwiązanie: wszystko w `Main.java`.
+- Porządniej: każda klasa w osobnym pliku. W IntelliJ prawy klik na `src` → *New* → *Java Class*.
+- `Alt+Insert` (*Generate*) wygeneruje konstruktor, gettery, settery i `toString()`. Oszczędza minuty na egzaminie.
+
+## Wizualizacja
+
+<Trace
+  title="Smycze i psy: referencje"
+  code={`Pies a = new Pies("Burek");
+Pies b = a;
+b.imie = "Azor";
+Pies c = new Pies("Azor");
+System.out.println(a.imie);
+System.out.println(a == b);
+System.out.println(a == c);`}
+  steps={[
+    { line: 1, vars: { a: '→ pies #1', 'pies #1': '{ imie: "Burek" }' }, note: 'new tworzy obiekt w pamięci (pies #1). Zmienna a trzyma tylko adres.' },
+    { line: 2, vars: { a: '→ pies #1', b: '→ pies #1', 'pies #1': '{ imie: "Burek" }' }, note: 'Kopiujemy ADRES, a nie psa. Dwie smycze, jeden pies.' },
+    { line: 3, vars: { a: '→ pies #1', b: '→ pies #1', 'pies #1': '{ imie: "Azor" }' }, note: 'Zmieniamy imię przez smycz b. Pies jest jeden, więc zmiana jest widoczna też przez a.' },
+    { line: 4, vars: { a: '→ pies #1', b: '→ pies #1', c: '→ pies #2', 'pies #1': '{ imie: "Azor" }', 'pies #2': '{ imie: "Azor" }' }, note: 'Nowy obiekt. Ma takie samo imię, ale to inny pies.' },
+    { line: 5, vars: { a: '→ pies #1', b: '→ pies #1', c: '→ pies #2' }, out: 'Azor\n' },
+    { line: 6, vars: { a: '→ pies #1', b: '→ pies #1', c: '→ pies #2' }, out: 'true\n', note: 'Ten sam adres.' },
+    { line: 7, vars: { a: '→ pies #1', b: '→ pies #1', c: '→ pies #2' }, out: 'false\n', note: 'Te same dane, ale różne obiekty. == porównuje adresy!' },
+  ]}
+/>
+
+## Przykład kodu
+
+```java title="Main.java" expect="Saldo: 70.00 zł"
+class KontoBankowe {
+    private String wlasciciel;          // private: z zewnątrz nie da się „grzebać”
+    private double saldo;
+
+    public KontoBankowe(String wlasciciel) {
+        this.wlasciciel = wlasciciel;   // saldo samo ma 0.0 (wartość domyślna pola)
+    }
+
+    public void wplac(double kwota) {
+        if (kwota > 0) {                // setter z walidacją
+            saldo += kwota;
+        }
+    }
+
+    public boolean wyplac(double kwota) {
+        if (kwota <= 0 || kwota > saldo) {
+            return false;               // odmowa: informujemy wywołującego
+        }
+        saldo -= kwota;
+        return true;
+    }
+
+    public double getSaldo() {          // getter: tylko odczyt
+        return saldo;
+    }
+
+    @Override
+    public String toString() {
+        return wlasciciel + " | Saldo: " + String.format("%.2f", saldo) + " zł";
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        KontoBankowe konto = new KontoBankowe("Dawid");
+        konto.wplac(100);
+        konto.wplac(-50);                                   // zignorowane przez walidację
+        boolean udana = konto.wyplac(30);
+        boolean nieudana = konto.wyplac(500);
+
+        System.out.println(konto);                          // wywoła toString()
+        System.out.println("Wypłata 30: " + udana + ", wypłata 500: " + nieudana);
+        System.out.printf("Saldo: %.2f zł%n", konto.getSaldo());
+    }
+}
+```
+
+## Najczęstsze błędy
+
+<Mistake title="Zapomniane new">
+
+```java check="throws"
+class Pies { String imie; }
+Pies p = null;
+System.out.println(p.imie.length());
+```
+
+`NullPointerException`. Zmienna zadeklarowana, ale nie wskazuje żadnego obiektu. Zawsze `Pies p = new Pies();`.
+</Mistake>
+
+<Mistake title="Dostęp do pola private z innej klasy">
+
+```java check="types"
+class Konto {
+    private double saldo;
+}
+```
+
+Gdy w `main` napiszesz `konto.saldo = 1000;`, dostaniesz `saldo has private access in Konto`. Użyj metody (`wplac`) albo gettera.
+</Mistake>
+
+<Mistake title="Brak this, gdy parametr nazywa się jak pole">
+`imie = imie;` przypisuje parametr sam do siebie, a pole zostaje puste (`null`). Kod się kompiluje, ale nie działa. Poprawnie: `this.imie = imie;`.
+</Mistake>
+
+<Mistake title="static przy metodach obiektu">
+Jeśli napiszesz `static void szczekaj()`, metoda nie zobaczy pól konkretnego psa (`non-static variable imie cannot be referenced from a static context`). Metody, które korzystają z pól obiektu, piszesz bez `static`.
+</Mistake>
+
+<Mistake title="Porównywanie obiektów przez ==">
+`new Pies("Azor") == new Pies("Azor")` to `false`. Dla napisów, które też są obiektami, używaj `equals`.
+</Mistake>
+
+## Trik na zapamiętanie
+
+<Trick title="Rzeczownik i czasowniki">
+Czytając treść zadania, podkreśl **rzeczowniki** i **czasowniki**:
+
+„Kość ma wartość i dostępność. Kość można rzucić i zablokować.”
+
+- Główny rzeczownik → **klasa** (`Kosc`)
+- „ma…” → **pola** (`wartosc`, `dostepna`)
+- „można…” → **metody** (`rzuc()`, `zablokuj()`)
+
+Szkielet klasy do odtworzenia z pamięci: **pola → konstruktor → metody → toString**. Zawsze w tej kolejności.
+</Trick>
+
+## Zadania
+
+<Task id="j1-10-1" title="Samochód" level="łatwe" minutes={15}>
+Napisz klasę `Samochod` z polami `marka` (String) i `przebieg` (int), konstruktorem przyjmującym markę (przebieg startuje od 0), metodą `jedz(int km)`, która zwiększa przebieg (tylko dla dodatnich km), oraz `toString()` zwracającym np. `Toyota, przebieg: 350 km`. W `main` utwórz dwa samochody, „pojeździj” nimi i wypisz oba.
+
+<Hint>Pola zrób `private`. Konstruktor ustawia tylko markę: `this.marka = marka;`.</Hint>
+<Hint>`jedz` to metoda `void` z warunkiem `if (km > 0)`.</Hint>
+<Solution>
+
+```java title="Main.java" expect="Toyota, przebieg: 350 km\nFiat, przebieg: 40 km"
+class Samochod {
+    private String marka;
+    private int przebieg;
+
+    public Samochod(String marka) {
+        this.marka = marka;
+    }
+
+    public void jedz(int km) {
+        if (km > 0) {
+            przebieg += km;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return marka + ", przebieg: " + przebieg + " km";
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Samochod toyota = new Samochod("Toyota");
+        Samochod fiat = new Samochod("Fiat");
+        toyota.jedz(200);
+        toyota.jedz(150);
+        fiat.jedz(40);
+        fiat.jedz(-10);              // zignorowane
+        System.out.println(toyota);
+        System.out.println(fiat);
+    }
+}
+```
+
+**Dlaczego tak:** każdy samochód ma **własny** przebieg. Jazda Toyotą nie zmienia licznika Fiata, bo to dwa różne obiekty.
+</Solution>
+</Task>
+
+<Task id="j1-10-2" title="Prostokąt z walidacją" level="średnie" minutes={15}>
+Klasa `Prostokat` z prywatnymi polami `a`, `b` (double). Konstruktor i settery mają zamieniać wartości ujemne na 0. Metody: `pole()`, `obwod()`, `czyKwadrat()`. Gettery dla obu boków. W `main` sprawdź prostokąt 3 × 4 (pole 12.0, obwód 14.0, nie kwadrat), a potem ustaw `b` na 3 i sprawdź, czy to kwadrat.
+
+<Hint>`Math.max(0, wartosc)` zwróci 0 dla liczb ujemnych, a dla pozostałych samą liczbę.</Hint>
+<Hint>Settery: `public void setB(double b) { this.b = Math.max(0, b); }`.</Hint>
+<Solution>
+
+```java title="Main.java" expect="Pole: 12.0, obwód: 14.0, kwadrat: false\nPo zmianie kwadrat: true"
+class Prostokat {
+    private double a;
+    private double b;
+
+    public Prostokat(double a, double b) {
+        setA(a);                      // konstruktor korzysta z setterów: walidacja w jednym miejscu
+        setB(b);
+    }
+
+    public void setA(double a) { this.a = Math.max(0, a); }
+    public void setB(double b) { this.b = Math.max(0, b); }
+    public double getA() { return a; }
+    public double getB() { return b; }
+
+    public double pole() { return a * b; }
+    public double obwod() { return 2 * (a + b); }
+    public boolean czyKwadrat() { return a == b; }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Prostokat p = new Prostokat(3, 4);
+        System.out.println("Pole: " + p.pole() + ", obwód: " + p.obwod() + ", kwadrat: " + p.czyKwadrat());
+        p.setB(3);
+        System.out.println("Po zmianie kwadrat: " + p.czyKwadrat());
+    }
+}
+```
+</Solution>
+</Task>
+
+<Task id="j1-10-3" title="Klasa z tablicą (arkusze 2021 i 2025)" level="egzamin" minutes={25}>
+Napisz klasę `Dziennik`:
+
+- prywatne pole `int[] oceny` i prywatne pole `int liczbaOcen` (ile ocen już wpisano),
+- konstruktor przyjmuje maksymalną liczbę ocen i tworzy tablicę tego rozmiaru,
+- `boolean dodaj(int ocena)`: dodaje ocenę 1–6, jeśli jest miejsce. Zwraca, czy się udało,
+- `double srednia()`: zwraca średnią dodanych ocen (0, gdy brak ocen),
+- `int ileRownych(int ocena)`: zwraca, ile razy wpisano daną ocenę,
+- `void wypisz()`: wypisuje oceny w jednej linii.
+
+W `main` utwórz dziennik na 5 ocen, dodaj 5, 4, 7, 6, 4, 3, 5 (część się nie doda) i wypisz wyniki.
+
+<Hint>Ocena trafia pod indeks `liczbaOcen`, potem `liczbaOcen++`. Tak rośnie „zapełniona” część tablicy.</Hint>
+<Hint>`dodaj` odrzuca, gdy `ocena < 1 || ocena > 6 || liczbaOcen == oceny.length`.</Hint>
+<Hint>Pętle w `srednia`, `ileRownych` i `wypisz` idą do `liczbaOcen`, a nie do `oceny.length`. Reszta tablicy to puste zera.</Hint>
+<Solution>
+
+```java title="Main.java" expect="Oceny: 5 4 6 4 3 \nŚrednia: 4.40\nCzwórek: 2"
+class Dziennik {
+    private int[] oceny;
+    private int liczbaOcen;                        // ile miejsc jest już zajętych
+
+    public Dziennik(int maksymalnie) {
+        oceny = new int[maksymalnie];
+        liczbaOcen = 0;
+    }
+
+    public boolean dodaj(int ocena) {
+        if (ocena < 1 || ocena > 6 || liczbaOcen == oceny.length) {
+            return false;
+        }
+        oceny[liczbaOcen] = ocena;                 // pierwsze wolne miejsce
+        liczbaOcen++;
+        return true;
+    }
+
+    public double srednia() {
+        if (liczbaOcen == 0) {
+            return 0;
+        }
+        int suma = 0;
+        for (int i = 0; i < liczbaOcen; i++) {     // tylko zapełniona część
+            suma += oceny[i];
+        }
+        return (double) suma / liczbaOcen;
+    }
+
+    public int ileRownych(int ocena) {
+        int licznik = 0;
+        for (int i = 0; i < liczbaOcen; i++) {
+            if (oceny[i] == ocena) {
+                licznik++;
+            }
+        }
+        return licznik;
+    }
+
+    public void wypisz() {
+        System.out.print("Oceny: ");
+        for (int i = 0; i < liczbaOcen; i++) {
+            System.out.print(oceny[i] + " ");
+        }
+        System.out.println();
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Dziennik dziennik = new Dziennik(5);
+        int[] doDodania = {5, 4, 7, 6, 4, 3, 5};
+        for (int ocena : doDodania) {
+            if (!dziennik.dodaj(ocena)) {
+                System.out.println("Nie dodano oceny " + ocena);
+            }
+        }
+        dziennik.wypisz();
+        System.out.printf("Średnia: %.2f%n", dziennik.srednia());
+        System.out.println("Czwórek: " + dziennik.ileRownych(4));
+    }
+}
+```
+
+**Dlaczego tak:** para „tablica + licznik zajętych miejsc” to dokładnie wzorzec z arkusza 2025 (prywatna tablica i prywatna liczba elementów). Ocena 7 odpada przez zakres, a ostatnia piątka przez brak miejsca.
+</Solution>
+</Task>

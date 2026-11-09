@@ -1,0 +1,289 @@
+<Why>
+Losowanie było w arkuszach 2022 (tablica 1–100), 2024 (kości), 2025 (lotto) i 2026 (rzut kością). Za „użycie generatora liczb pseudolosowych” i poprawny zakres są osobne punkty. A klasa `Math` to gotowe wzory, których nie musisz pisać sam.
+</Why>
+
+## Teoria krok po kroku
+
+### 1. Random
+
+```java check="body"
+Random generator = new Random();       // import java.util.Random;
+int rzut = generator.nextInt(6) + 1;   // 1..6
+double ulamek = generator.nextDouble(); // 0.0 (włącznie) .. 1.0 (bez)
+boolean orzel = generator.nextBoolean();
+```
+
+`nextInt(n)` zwraca liczbę **od 0 do n−1**. To jak bęben z n kulami ponumerowanymi od zera. Stąd `+ 1` przy kostce.
+
+### 2. Dowolny zakres
+
+<Analogy>
+Chcesz losować od 10 do 20. To 11 różnych wyników (10, 11, …, 20). Bierzesz bęben z 11 kulami (0–10) i do każdej wylosowanej kuli **dodajesz 10**. Kula 0 → 10, kula 10 → 20.
+</Analogy>
+
+**Wzór: `r.nextInt(max - min + 1) + min`**
+
+| Zakres | Kod |
+|---|---|
+| kostka 1–6 | `r.nextInt(6) + 1` |
+| 1–100 | `r.nextInt(100) + 1` |
+| lotto 1–49 | `r.nextInt(49) + 1` |
+| 0–255 (kolor RGB) | `r.nextInt(256)` |
+| −5…5 | `r.nextInt(11) - 5` |
+
+W Javie 17+ jest też `r.nextInt(min, max + 1)`. Drugi argument jest **wyłączony**, łatwo o pomyłkę, więc trzymaj się wzoru wyżej.
+
+### 3. Math.random()
+
+Starszy sposób, bez tworzenia obiektu: `Math.random()` zwraca `double` od 0.0 do 1.0 (bez 1.0). Kostka: `(int) (Math.random() * 6) + 1`. Działa, ale wzór z `Random` jest czytelniejszy.
+
+### 4. Jeden generator na cały program
+
+Twórz `Random` **raz** (np. jako pole `static final`) i używaj wielokrotnie. Tworzenie nowego generatora w każdej iteracji pętli działa, ale jest zbędne.
+
+**Ziarno (seed):** `new Random(42)` przy każdym uruchomieniu daje ten sam ciąg liczb. Liczby są **pseudolosowe**: wyliczane wzorem z ziarna. Przydaje się w testach jednostkowych (lekcja 6.5), gdy wynik musi być powtarzalny.
+
+### 5. Klasa Math
+
+| Metoda | Co robi | Przykład | Wynik |
+|---|---|---|---|
+| `Math.abs(x)` | wartość bezwzględna | `Math.abs(-7)` | `7` |
+| `Math.max(a, b)` / `min` | większa / mniejsza | `Math.max(3, 9)` | `9` |
+| `Math.pow(a, b)` | potęga (**double**) | `Math.pow(2, 10)` | `1024.0` |
+| `Math.sqrt(x)` | pierwiastek | `Math.sqrt(16)` | `4.0` |
+| `Math.round(x)` | zaokrąglenie do całości | `Math.round(2.5)` | `3` |
+| `Math.floor(x)` | w dół | `Math.floor(2.9)` | `2.0` |
+| `Math.ceil(x)` | w górę | `Math.ceil(2.1)` | `3.0` |
+| `Math.PI` | π | | `3.14159…` |
+
+Zaokrąglenie do 2 miejsc **jako liczba**: `Math.round(x * 100) / 100.0`. Do samego wypisania wystarczy `printf("%.2f", x)`.
+
+## Wizualizacja
+
+<Trace
+  title="Wzór na zakres: losujemy od 3 do 8"
+  code={`int min = 3, max = 8;
+int ileWartosci = max - min + 1;
+int kula = r.nextInt(ileWartosci);
+int wynik = kula + min;`}
+  steps={[
+    { line: 1, vars: { min: 3, max: 8 } },
+    { line: 2, vars: { min: 3, max: 8, ileWartosci: 6 }, note: 'Możliwe wyniki: 3, 4, 5, 6, 7, 8, czyli 6 wartości. Stąd +1: oba końce się liczą.' },
+    { line: 3, vars: { min: 3, max: 8, ileWartosci: 6, kula: 0 }, note: 'Bęben z kulami 0–5. Przypuśćmy, że wypadło najmniej, czyli 0.' },
+    { line: 4, vars: { min: 3, max: 8, ileWartosci: 6, kula: 0, wynik: 3 }, note: '0 + 3 = 3: najmniejsza możliwa wartość to dokładnie min.' },
+    { line: 3, vars: { min: 3, max: 8, ileWartosci: 6, kula: 5 }, note: 'A gdyby wypadło najwięcej, czyli 5?' },
+    { line: 4, vars: { min: 3, max: 8, ileWartosci: 6, kula: 5, wynik: 8 }, note: '5 + 3 = 8: największa możliwa wartość to dokładnie max. Wzór działa.' },
+  ]}
+/>
+
+## Przykład kodu
+
+```java title="Main.java"
+import java.util.Random;
+
+public class Main {
+    static final Random GENERATOR = new Random();             // jeden na cały program
+
+    /** Zwraca losową liczbę całkowitą z przedziału [min, max]. */
+    static int losuj(int min, int max) {
+        return GENERATOR.nextInt(max - min + 1) + min;
+    }
+
+    public static void main(String[] args) {
+        int[] liczby = new int[10];
+        for (int i = 0; i < liczby.length; i++) {
+            liczby[i] = losuj(1, 100);                         // wypełnianie pętlą
+        }
+        for (int liczba : liczby) {
+            System.out.print(liczba + " ");
+        }
+        System.out.println();
+
+        String[] owoce = {"jabłko", "gruszka", "śliwka"};
+        System.out.println("Wylosowany owoc: " + owoce[GENERATOR.nextInt(owoce.length)]);
+
+        char litera = (char) ('a' + GENERATOR.nextInt(26));    // losowa litera a..z
+        System.out.println("Losowa litera: " + litera);
+
+        double x = 7.0 / 3;
+        System.out.println(Math.round(x * 100) / 100.0);        // 2.33
+        System.out.println(Math.pow(2, 10));                     // 1024.0
+        System.out.println((int) Math.sqrt(50));                 // 7
+    }
+}
+```
+
+## Najczęstsze błędy
+
+<Mistake title="Kostka od zera">
+`r.nextInt(6)` daje 0–5. Kostka bez szóstki i z zerem to klasyczny błąd, za który egzaminator nie da punktu za zakres.
+</Mistake>
+
+<Mistake title="Zły zakres przy min > 1">
+`r.nextInt(20) + 10` daje 10–29, a nie 10–20. Zawsze licz **ile wartości** (`max - min + 1`), a potem **przesuń** o `min`.
+</Mistake>
+
+<Mistake title="Rzutowanie w złym miejscu">
+`(int) Math.random() * 6 + 1` zawsze daje 1. Rzutowanie działa na `Math.random()`, które daje 0.0…0.99, więc po obcięciu zawsze wychodzi 0. Nawias musi objąć mnożenie: `(int) (Math.random() * 6) + 1`.
+</Mistake>
+
+<Mistake title="int x = Math.pow(...)">
+
+```java check="error"
+int potega = Math.pow(2, 3);
+```
+
+`possible lossy conversion from double to int`. `Math.pow` zwraca `double`. Rzutuj: `(int) Math.pow(2, 3)`.
+</Mistake>
+
+## Trik na zapamiętanie
+
+<Trick title="Ile i od ilu">
+Wzór na zakres to dwa pytania: **„ile wartości?”** i **„od ilu?”**.
+
+`nextInt(ILE) + OD_ILU`, gdzie ILE = max − min + 1.
+
+Kostka: 6 wartości, od 1 → `nextInt(6) + 1`. Lotto: 49 wartości, od 1 → `nextInt(49) + 1`.
+</Trick>
+
+## Zadania
+
+<Task id="j1-15-1" title="Pięć kostek" level="łatwe" minutes={10}>
+Wylosuj wyniki 5 kostek do tablicy, wypisz je w formacie `Kostka 1: 4` (każda w nowej linii) i podaj sumę oczek.
+
+<Hint>Tablica `int[5]`, pętla z `r.nextInt(6) + 1`.</Hint>
+<Hint>Numer kostki dla człowieka to `i + 1`.</Hint>
+<Solution>
+
+```java title="Main.java" expect="Kostka 5:"
+import java.util.Random;
+
+public class Main {
+    public static void main(String[] args) {
+        Random generator = new Random();
+        int[] kostki = new int[5];
+        int suma = 0;
+        for (int i = 0; i < kostki.length; i++) {
+            kostki[i] = generator.nextInt(6) + 1;
+            suma += kostki[i];
+            System.out.println("Kostka " + (i + 1) + ": " + kostki[i]);
+        }
+        System.out.println("Suma oczek: " + suma);
+    }
+}
+```
+</Solution>
+</Task>
+
+<Task id="j1-15-2" title="Punkty w grze w kości (arkusz 2024)" level="egzamin" minutes={25}>
+Punkty w grze to suma oczek tych wartości, które wypadły **co najmniej dwa razy**. Wartości wylosowane tylko raz się nie liczą.
+
+- `1, 5, 2, 2, 5` → 14 (2 + 2 + 5 + 5)
+- `2, 1, 2, 3, 2` → 6 (2 + 2 + 2)
+
+Napisz metodę `static int policzPunkty(int[] kostki)` i sprawdź ją na obu przykładach. Potem dopisz metodę `static int[] rzucKostkami(int ile)` i wypisz punkty dla losowego rzutu 5 kostkami.
+
+<Hint>Najpierw zlicz, ile razy wypadła każda wartość: tablica liczników `new int[7]` z lekcji 1.7.</Hint>
+<Hint>Potem dla każdej wartości `oczka` od 1 do 6: jeśli `ile[oczka] >= 2`, dodaj `oczka * ile[oczka]`.</Hint>
+<Hint>Alternatywa bez liczników: dla każdej kostki policz w zagnieżdżonej pętli, ile razy jej wartość występuje w tablicy. Jeśli ≥ 2, dodaj ją do sumy.</Hint>
+<Solution>
+
+```java title="Main.java" expect="14\n6"
+import java.util.Random;
+
+public class Main {
+    static final Random GENERATOR = new Random();
+
+    /** Losuje wyniki podanej liczby kostek. */
+    static int[] rzucKostkami(int ile) {
+        int[] wyniki = new int[ile];
+        for (int i = 0; i < ile; i++) {
+            wyniki[i] = GENERATOR.nextInt(6) + 1;
+        }
+        return wyniki;
+    }
+
+    /** Sumuje oczka wartości, które wypadły co najmniej dwa razy. */
+    static int policzPunkty(int[] kostki) {
+        int[] ileRazy = new int[7];               // indeks = liczba oczek
+        for (int oczka : kostki) {
+            ileRazy[oczka]++;
+        }
+        int punkty = 0;
+        for (int oczka = 1; oczka <= 6; oczka++) {
+            if (ileRazy[oczka] >= 2) {
+                punkty += oczka * ileRazy[oczka];
+            }
+        }
+        return punkty;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(policzPunkty(new int[] {1, 5, 2, 2, 5}));   // test 1
+        System.out.println(policzPunkty(new int[] {2, 1, 2, 3, 2}));   // test 2
+
+        int[] rzut = rzucKostkami(5);
+        for (int i = 0; i < rzut.length; i++) {
+            System.out.println("Kostka " + (i + 1) + ": " + rzut[i]);
+        }
+        System.out.println("Liczba uzyskanych punktów: " + policzPunkty(rzut));
+    }
+}
+```
+
+**Dlaczego tak:** sprawdzenie metody na przykładach z treści, zanim połączysz ją z losowaniem, to najszybszy sposób, żeby wiedzieć, że liczy dobrze. To już prawie test jednostkowy.
+</Solution>
+</Task>
+
+<Task id="j1-15-3" title="Losowe hasło" level="średnie" minutes={15}>
+Napisz metodę `static String losoweHaslo(int dlugosc)`, która tworzy hasło z małych i wielkich liter oraz cyfr. Wypisz trzy hasła po 8 znaków.
+
+<Hint>Zapisz wszystkie dozwolone znaki w jednym napisie: `"abc...zABC...Z0123456789"`.</Hint>
+<Hint>W pętli losuj indeks `r.nextInt(znaki.length())` i dopisuj `znaki.charAt(indeks)` do `StringBuilder`.</Hint>
+<Solution>
+
+```java title="Main.java"
+import java.util.Random;
+
+public class Main {
+    static final Random GENERATOR = new Random();
+    static final String ZNAKI = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+    static String losoweHaslo(int dlugosc) {
+        StringBuilder haslo = new StringBuilder();
+        for (int i = 0; i < dlugosc; i++) {
+            int indeks = GENERATOR.nextInt(ZNAKI.length());   // losowa pozycja w puli
+            haslo.append(ZNAKI.charAt(indeks));
+        }
+        return haslo.toString();
+    }
+
+    public static void main(String[] args) {
+        for (int i = 0; i < 3; i++) {
+            System.out.println(losoweHaslo(8));
+        }
+    }
+}
+```
+
+**Dlaczego tak:** losowy element z puli to `pula[losowyIndeks]`, ten sam trik co z owocami. W arkuszu 2023 generator hasła miał opcje (wielkie litery, cyfry, znaki specjalne). Rozwiniesz go w lekcji 2.19.
+</Solution>
+</Task>
+
+<Task id="j1-15-4" title="Przekątna i zaokrąglenia" level="łatwe" minutes={10}>
+Dla prostokąta 5 × 7 policz przekątną (√(a² + b²)) i wypisz ją: dokładnie, zaokrągloną do 2 miejsc, w dół i w górę do liczby całkowitej. Oczekiwane: 8.602325267042627, 8.6, 8, 9.
+
+<Hint>`Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2))` albo `Math.sqrt(a * a + b * b)`.</Hint>
+<Hint>`Math.round(x * 100) / 100.0`, `(int) Math.floor(x)`, `(int) Math.ceil(x)`.</Hint>
+<Solution>
+
+```java check="body" expect="8.602325267042627\n8.6\n8\n9"
+double a = 5, b = 7;
+double przekatna = Math.sqrt(a * a + b * b);
+System.out.println(przekatna);
+System.out.println(Math.round(przekatna * 100) / 100.0);   // 8.6 (bo 8.60, zero na końcu znika)
+System.out.println((int) Math.floor(przekatna));
+System.out.println((int) Math.ceil(przekatna));
+```
+</Solution>
+</Task>

@@ -1,0 +1,325 @@
+<Why>
+Tablica przechowuje **wiele wartości pod jedną nazwą**: 50 losowych liczb, 5 wyników kostek, oceny całej klasy. Każdy arkusz konsolowy INF.04 z ostatnich lat wymagał tablicy albo kolekcji. Bez niej nie ma sortowania ani wyszukiwania.
+</Why>
+
+## Teoria krok po kroku
+
+### 1. Tablica to rząd szafek
+
+<Analogy>
+Zmienna to jedna szafka. Tablica to **rząd ponumerowanych szafek** na korytarzu. Wszystkie są tego samego rozmiaru (typu), a numeracja zaczyna się **od zera**. Szafka nr 0, nr 1, nr 2… Rzędu nie da się wydłużyć: ile szafek zamontujesz, tyle masz.
+</Analogy>
+
+```java check="body"
+int[] oceny = new int[5];        // 5 szafek na inty, w każdej na start jest 0
+oceny[0] = 4;                    // do pierwszej (indeks 0) wkładam 4
+oceny[4] = 5;                    // do ostatniej (indeks 4!) wkładam 5
+int[] rzuty = {3, 6, 1, 6, 2};   // tablica od razu z wartościami
+System.out.println(rzuty.length);   // 5: rozmiar (pole, bez nawiasów)
+```
+
+### 2. Najważniejsze fakty
+
+- Indeksy: od `0` do `length - 1`.
+- Rozmiar ustalasz przy tworzeniu i **nie da się go zmienić**. (Gdy potrzebujesz zmiennej długości, użyjesz `ArrayList`, lekcja 1.13.)
+- Wartości domyślne: `0` dla liczb, `false` dla `boolean`, `null` dla `String` i obiektów.
+- Sięgnięcie poza zakres kończy się wyjątkiem `ArrayIndexOutOfBoundsException`.
+
+### 3. Przechodzenie po tablicy
+
+Zwykły `for` z indeksem: gdy chcesz **zmieniać** elementy albo potrzebujesz numeru:
+
+```java check="body"
+int[] t = new int[10];
+for (int i = 0; i < t.length; i++) {    // i < length, NIE i <= length
+    t[i] = (i + 1) * 10;                  // 10, 20, ..., 100
+}
+```
+
+**for-each**: gdy chcesz tylko **odczytać** każdy element po kolei:
+
+```java check="body" expect="550"
+int[] t = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
+int suma = 0;
+for (int wartosc : t) {    // czytaj: „dla każdej wartości z tablicy t”
+    suma += wartosc;
+}
+System.out.println(suma);
+```
+
+Przypisanie do `wartosc` w for-each **nie zmienia** tablicy, bo to tylko kopia elementu.
+
+### 4. Wypisywanie
+
+```java check="body" expect="[3, 6, 1]"
+int[] t = {3, 6, 1};
+System.out.println(t);                    // [I@1b6d3586: adres w pamięci, nie to, czego chcesz
+System.out.println(Arrays.toString(t));   // [3, 6, 1]: wymaga import java.util.Arrays;
+```
+
+Na egzaminie zwykle trzeba wypisać w określonym formacie (np. `Kostka 1: 5`), więc i tak napiszesz pętlę.
+
+### 5. Tablica to referencja
+
+Zmienna tablicowa nie trzyma samych liczb, tylko **adres** rzędu szafek. Dlatego `int[] b = a;` nie tworzy kopii: `a` i `b` to dwie karteczki z tym samym adresem. Zmiana przez `b` jest widoczna przez `a`. Kopię robisz przez `int[] kopia = Arrays.copyOf(a, a.length);`.
+
+### 6. Tablica liczników
+
+Sztuczka, która rozwiązała arkusze z 2024 i 2025: **wartość staje się indeksem**.
+
+```java check="body" expect="Szóstek: 3"
+int[] rzuty = {3, 6, 1, 6, 2, 6, 3};
+int[] ile = new int[7];          // indeksy 0..6, indeks 0 nieużywany (kostka nie ma 0 oczek)
+for (int r : rzuty) {
+    ile[r]++;                    // wyrzucono r, więc zwiększ licznik pod numerem r
+}
+System.out.println("Szóstek: " + ile[6]);
+```
+
+<Analogy>
+Sześć słoików podpisanych 1–6. Za każdy rzut wrzucasz fasolkę do słoika z numerem oczek. Na końcu liczysz fasolki w każdym słoiku.
+</Analogy>
+
+### 7. Tablice dwuwymiarowe
+
+Tabela z wierszami i kolumnami, np. plansza do gry albo oceny uczniów z kilku przedmiotów:
+
+```java check="body" expect="6"
+int[][] plansza = new int[3][4];         // 3 wiersze, 4 kolumny
+plansza[1][2] = 7;                       // wiersz 1, kolumna 2
+int[][] m = { {1, 2, 3}, {4, 5, 6} };
+System.out.println(m[1][2]);             // 6
+// m.length = 2 (wiersze), m[0].length = 3 (kolumny)
+```
+
+Przechodzisz je dwiema zagnieżdżonymi pętlami: zewnętrzna po wierszach, wewnętrzna po kolumnach.
+
+## Wizualizacja
+
+<Trace
+  title="Wypełnianie tablicy kwadratami"
+  code={`int[] t = new int[4];
+for (int i = 0; i < t.length; i++) {
+    t[i] = i * i;
+}
+System.out.println(t[3]);`}
+  steps={[
+    { line: 1, vars: { t: [0, 0, 0, 0] }, note: 'Cztery szafki, w każdej 0. Pod każdą widać jej indeks.' },
+    { line: 2, vars: { t: [0, 0, 0, 0], i: 0 }, hl: { t: 0 }, note: 'i = 0, a 0 < 4.' },
+    { line: 3, vars: { t: [0, 0, 0, 0], i: 0 }, hl: { t: 0 }, note: 't[0] = 0 · 0 = 0' },
+    { line: 2, vars: { t: [0, 0, 0, 0], i: 1 }, hl: { t: 1 } },
+    { line: 3, vars: { t: [0, 1, 0, 0], i: 1 }, hl: { t: 1 }, note: 't[1] = 1 · 1 = 1' },
+    { line: 2, vars: { t: [0, 1, 0, 0], i: 2 }, hl: { t: 2 } },
+    { line: 3, vars: { t: [0, 1, 4, 0], i: 2 }, hl: { t: 2 }, note: 't[2] = 2 · 2 = 4' },
+    { line: 2, vars: { t: [0, 1, 4, 0], i: 3 }, hl: { t: 3 } },
+    { line: 3, vars: { t: [0, 1, 4, 9], i: 3 }, hl: { t: 3 }, note: 't[3] = 3 · 3 = 9. To ostatnia szafka.' },
+    { line: 2, vars: { t: [0, 1, 4, 9], i: 4 }, note: 'i = 4, a 4 < 4 to fałsz. Gdyby warunek brzmiał i <= t.length, następny krok sięgnąłby do nieistniejącej szafki t[4] i program by się wywrócił.' },
+    { line: 5, vars: { t: [0, 1, 4, 9] }, hl: { t: 3 }, out: '9\n' },
+  ]}
+/>
+
+## Przykład kodu
+
+```java title="Main.java" stdin="4\n5\n3\n5\n6"
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        final int LICZBA_OCEN = 5;
+        int[] oceny = new int[LICZBA_OCEN];               // rozmiar ze stałej, nie „magiczna” liczba
+
+        for (int i = 0; i < oceny.length; i++) {          // wczytywanie
+            System.out.print("Ocena " + (i + 1) + ": ");  // dla człowieka numerujemy od 1
+            oceny[i] = sc.nextInt();
+        }
+
+        int suma = 0;
+        int ilePiatekLubSzostek = 0;
+        for (int ocena : oceny) {                         // tylko odczyt: for-each
+            suma += ocena;
+            if (ocena >= 5) {
+                ilePiatekLubSzostek++;
+            }
+        }
+
+        System.out.print("Oceny od końca: ");
+        for (int i = oceny.length - 1; i >= 0; i--) {     // od ostatniego indeksu do 0
+            System.out.print(oceny[i] + " ");
+        }
+        System.out.println();
+        System.out.printf("Średnia: %.2f%n", (double) suma / oceny.length);
+        System.out.println("Ocen 5 i 6: " + ilePiatekLubSzostek);
+    }
+}
+```
+
+## Najczęstsze błędy
+
+<Mistake title="i <= t.length">
+
+```java check="throws"
+int[] t = new int[3];
+for (int i = 0; i <= t.length; i++) {
+    t[i] = i;
+}
+```
+
+`ArrayIndexOutOfBoundsException: Index 3 out of bounds for length 3`. Ostatni indeks to `length - 1`, więc warunek to `i < t.length`.
+</Mistake>
+
+<Mistake title="Nawiasy przy length">
+`t.length()` się nie skompiluje. Dla tablicy: `t.length`. Dla napisu: `s.length()`. Dla listy: `lista.size()`. Zapamiętaj: **tablica jest prosta, nie ma nawiasów**.
+</Mistake>
+
+<Mistake title="Numerowanie od 1 dla użytkownika i od 0 w tablicy">
+Użytkownik chce widzieć „Kostka 1”, a w tablicy to `t[0]`. Przy wypisywaniu pisz `(i + 1)`. Nie przesuwaj indeksów tablicy.
+</Mistake>
+
+<Mistake title="Kopia, która nie jest kopią">
+`int[] kopia = oryginal;` i potem sortujesz `kopia`? Posortowałeś też oryginał. Do prawdziwej kopii: `Arrays.copyOf(oryginal, oryginal.length)`.
+</Mistake>
+
+<Mistake title="Nazwa tab">
+Na egzaminie `tab` i `t` to przykłady niedopuszczalnych nazw (R.1.4). Na tej stronie czasem używam `t` w krótkich szkicach, ale w arkuszu pisz `wyniki`, `liczby`, `oczka`.
+</Mistake>
+
+## Trik na zapamiętanie
+
+<Trick title="Złota linijka">
+Zapisz sobie na kartce i powtarzaj, aż wejdzie w palce:
+
+```java check="body"
+int[] t = new int[5];
+for (int i = 0; i < t.length; i++) {
+    // t[i]
+}
+```
+
+**Zero, mniejsze, length.** Od zera, warunek „mniejsze niż”, długość bez nawiasów. W IntelliJ skrót `fori` + Tab wpisze szkielet pętli, a `itar` + Tab od razu pętlę po tablicy.
+
+Tablica liczników: **„wartość jest adresem”** → `ile[wartosc]++`.
+</Trick>
+
+## Zadania
+
+<Task id="j1-7-1" title="Od końca" level="łatwe" minutes={10}>
+Wczytaj 5 liczb całkowitych do tablicy i wypisz je w odwrotnej kolejności, oddzielone spacjami.
+
+<Hint>Najpierw pętla wczytująca od 0 do 4.</Hint>
+<Hint>Druga pętla: start `liczby.length - 1`, warunek `i >= 0`, krok `i--`.</Hint>
+<Solution>
+
+```java title="Main.java" stdin="1 2 3 4 5" expect="5 4 3 2 1"
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int[] liczby = new int[5];
+        System.out.print("Podaj 5 liczb: ");
+        for (int i = 0; i < liczby.length; i++) {
+            liczby[i] = sc.nextInt();
+        }
+        for (int i = liczby.length - 1; i >= 0; i--) {
+            System.out.print(liczby[i] + " ");
+        }
+        System.out.println();
+    }
+}
+```
+</Solution>
+</Task>
+
+<Task id="j1-7-2" title="Powyżej średniej" level="średnie" minutes={15}>
+Dla tablicy `int[] temperatury = {12, 15, 9, 20, 18, 11, 14};` policz średnią, a potem wypisz, ile dni (i które wartości) było **powyżej średniej**. Oczekiwane: średnia 14.14, powyżej: `15 20 18` (3 dni).
+
+<Hint>Potrzebujesz dwóch przejść: najpierw cała suma (żeby znać średnią), potem porównywanie.</Hint>
+<Hint>Średnia jako `double`. Porównanie `int > double` działa normalnie.</Hint>
+<Solution>
+
+```java check="body" expect="15 20 18 \nDni powyżej średniej: 3"
+int[] temperatury = {12, 15, 9, 20, 18, 11, 14};
+
+int suma = 0;
+for (int t : temperatury) {
+    suma += t;
+}
+double srednia = (double) suma / temperatury.length;
+System.out.printf("Średnia: %.2f%n", srednia);
+
+int ileDni = 0;
+for (int t : temperatury) {
+    if (t > srednia) {
+        System.out.print(t + " ");
+        ileDni++;
+    }
+}
+System.out.println();
+System.out.println("Dni powyżej średniej: " + ileDni);
+```
+
+**Dlaczego tak:** średniej nie znasz, dopóki nie zsumujesz wszystkiego. Dlatego „policz coś, a potem porównaj z tym każdy element” zawsze wymaga dwóch pętli.
+</Solution>
+</Task>
+
+<Task id="j1-7-3" title="Statystyka rzutów (tablica liczników)" level="egzamin" minutes={20}>
+Masz wyniki 15 rzutów kostką: `int[] rzuty = {2, 5, 5, 1, 6, 2, 5, 3, 6, 6, 4, 5, 2, 1, 5};`. Wypisz, ile razy wypadła każda liczba oczek w formacie `oczka: liczba wystąpień`, np. `1: 2`. Potem wypisz, która liczba oczek wypadła najczęściej (tu: `5`).
+
+<Hint>Tablica `new int[7]`, żeby indeksy 1–6 odpowiadały oczkom.</Hint>
+<Hint>Zliczanie: `ile[rzut]++` w pętli for-each. Wypisywanie: `for (int oczka = 1; oczka <= 6; oczka++)`.</Hint>
+<Hint>Najczęstsza: szukasz indeksu z maksymalną wartością w tablicy `ile`. Pamiętaj indeks, a nie samą wartość.</Hint>
+<Solution>
+
+```java check="body" expect="5: 5\n6: 3\nNajczęściej wypadało: 5"
+int[] rzuty = {2, 5, 5, 1, 6, 2, 5, 3, 6, 6, 4, 5, 2, 1, 5};
+
+int[] ile = new int[7];                       // ile[0] nieużywane
+for (int rzut : rzuty) {
+    ile[rzut]++;                              // wartość rzutu jest indeksem licznika
+}
+
+int najczestsze = 1;                          // zakładam, że jedynka
+for (int oczka = 1; oczka <= 6; oczka++) {
+    System.out.println(oczka + ": " + ile[oczka]);
+    if (ile[oczka] > ile[najczestsze]) {
+        najczestsze = oczka;                  // zapamiętuję numer, nie liczbę wystąpień
+    }
+}
+System.out.println("Najczęściej wypadało: " + najczestsze);
+```
+
+**Dlaczego tak:** zamiast sześciu `if`-ów (`if rzut == 1 ...`) jedna linijka `ile[rzut]++`. W arkuszu z 2025 to samo, tylko dla liczb 1–49 w lotto: `new int[50]`.
+</Solution>
+</Task>
+
+<Task id="j1-7-4" title="Macierz 3×3" level="średnie" minutes={15}>
+Dla `int[][] m = { {2, 7, 6}, {9, 5, 1}, {4, 3, 8} };` wypisz macierz w trzech wierszach, sumę każdego wiersza i sumę głównej przekątnej (2 + 5 + 8 = 15).
+
+<Hint>Dwie zagnieżdżone pętle: `w` po wierszach (`m.length`), `k` po kolumnach (`m[w].length`).</Hint>
+<Hint>Suma wiersza: akumulator zerujesz na początku każdego przebiegu zewnętrznej pętli.</Hint>
+<Hint>Przekątna to elementy, gdzie numer wiersza = numer kolumny: `m[i][i]`. Wystarczy jedna pętla.</Hint>
+<Solution>
+
+```java check="body" expect="Suma przekątnej: 15"
+int[][] m = { {2, 7, 6}, {9, 5, 1}, {4, 3, 8} };
+
+for (int w = 0; w < m.length; w++) {
+    int sumaWiersza = 0;                       // zeruję dla KAŻDEGO wiersza
+    for (int k = 0; k < m[w].length; k++) {
+        System.out.print(m[w][k] + " ");
+        sumaWiersza += m[w][k];
+    }
+    System.out.println("| suma: " + sumaWiersza);
+}
+
+int sumaPrzekatnej = 0;
+for (int i = 0; i < m.length; i++) {
+    sumaPrzekatnej += m[i][i];
+}
+System.out.println("Suma przekątnej: " + sumaPrzekatnej);
+```
+
+**Ciekawostka:** to kwadrat magiczny, więc każdy wiersz też sumuje się do 15.
+</Solution>
+</Task>

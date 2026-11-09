@@ -1,0 +1,376 @@
+<Why>
+Arkusze INF.04 **wprost wymagają** osobnych funkcji: „osobna metoda losująca”, „osobna metoda licząca punkty, zwracająca sumę”. Algorytm wrzucony do `main` traci punkty. Metoda to też jedyny sposób, żeby nie pisać tego samego kodu cztery razy.
+</Why>
+
+## Teoria krok po kroku
+
+### 1. Metoda to przepis z nazwą
+
+<Analogy>
+Ekspres do kawy. Wrzucasz kapsułkę (**argument**), naciskasz przycisk (**wywołanie**), a ekspres oddaje kawę (**wartość zwracana**). Nie musisz wiedzieć, co się dzieje w środku. Wystarczy, że wiesz, co włożyć i co dostaniesz. A gdy chcesz drugą kawę, nie budujesz drugiego ekspresu, tylko naciskasz przycisk jeszcze raz.
+</Analogy>
+
+```java check="class"
+static int kwadrat(int liczba) {   // nagłówek: typ wyniku, nazwa, parametry
+    int wynik = liczba * liczba;   // ciało
+    return wynik;                  // oddaję wynik i KOŃCZĘ metodę
+}
+```
+
+| Część | W przykładzie | Znaczenie |
+|---|---|---|
+| modyfikator | `static` | Metoda należy do klasy, więc wywołasz ją z `main` bez tworzenia obiektu. |
+| typ zwracany | `int` | Jakiego typu wynik odda. `void` = nic nie oddaje. |
+| nazwa | `kwadrat` | Czasownik albo opis wyniku: `policzSume`, `czyPierwsza`, `wypiszTablice`. |
+| parametry | `(int liczba)` | Dane wejściowe. Może ich nie być: `()`. |
+| `return` | `return wynik;` | Oddaje wartość i natychmiast kończy metodę. |
+
+### 2. Wywołanie
+
+```java check="class"
+static int kwadrat(int liczba) {
+    return liczba * liczba;
+}
+
+static void przyklad() {
+    int x = kwadrat(5);                    // wynik 25 trafia do zmiennej x
+    System.out.println(kwadrat(7));        // 49 trafia prosto do println
+    int y = kwadrat(3) + kwadrat(4);       // 9 + 16 = 25
+}
+```
+
+Najważniejsze: wywołanie `kwadrat(5)` **zamienia się na wynik**. Możesz go zapisać do zmiennej, wypisać albo użyć w działaniu.
+
+### 3. void: metoda, która coś robi, ale nic nie oddaje
+
+```java check="class"
+static void wypiszLinie(int dlugosc) {
+    for (int i = 0; i < dlugosc; i++) {
+        System.out.print("-");
+    }
+    System.out.println();
+}
+```
+
+Wywołujesz ją jako osobną instrukcję: `wypiszLinie(20);`. Nie da się jej wyniku przypisać do zmiennej, bo wyniku nie ma.
+
+### 4. Zasięg zmiennych
+
+Zmienna żyje **tylko w bloku `{ }`, w którym ją zadeklarowano**. Zmienne z `main` nie są widoczne w innej metodzie i odwrotnie. Każda metoda ma swoje własne „pudełka”.
+
+Dlatego dane przekazujesz **parametrami**, a wyniki odbierasz przez **`return`**. Arkusze zabraniają zmiennych globalnych w podejściu strukturalnym i właśnie o to chodzi.
+
+### 5. Kopia czy oryginał?
+
+- Typy proste (`int`, `double`, `boolean`, `char`) przekazywane są **przez wartość**: metoda dostaje kopię. Zmiana w metodzie nie zmienia oryginału.
+- Tablice (i obiekty) przekazywane są **przez referencję**: metoda dostaje adres tej samej tablicy. Jeśli coś w niej zmieni (np. posortuje), zmiana jest widoczna w `main`.
+
+To bardzo wygodne: `sortuj(liczby);` sortuje tablicę „na miejscu”, więc metoda może być `void`.
+
+### 6. Przeciążanie
+
+Kilka metod o **tej samej nazwie**, ale z **różnymi parametrami**. Java wybiera właściwą po typach i liczbie argumentów:
+
+```java check="class"
+static double pole(double promien) {             // koło
+    return Math.PI * promien * promien;
+}
+
+static double pole(double a, double b) {         // prostokąt
+    return a * b;
+}
+```
+
+## Wizualizacja
+
+<Trace
+  title="Co się dzieje przy wywołaniu metody"
+  code={`static int kwadrat(int x) {
+    int wynik = x * x;
+    return wynik;
+}
+
+public static void main(String[] args) {
+    int a = 3;
+    int b = kwadrat(a + 1);
+    System.out.println(b);
+}`}
+  steps={[
+    { line: 6, note: 'Program startuje w main, nie w pierwszej metodzie w pliku.' },
+    { line: 7, vars: { 'a (main)': 3 } },
+    { line: 8, vars: { 'a (main)': 3 }, note: 'Najpierw liczy się argument: a + 1 = 4. Potem skok do metody kwadrat. main czeka.' },
+    { line: 1, vars: { 'a (main)': 3, 'x (kwadrat)': 4 }, note: 'Parametr x dostaje KOPIĘ wartości 4. To nowe, osobne pudełko.' },
+    { line: 2, vars: { 'a (main)': 3, 'x (kwadrat)': 4, 'wynik (kwadrat)': 16 } },
+    { line: 3, vars: { 'a (main)': 3, 'x (kwadrat)': 4, 'wynik (kwadrat)': 16 }, note: 'return oddaje 16 i kończy metodę. Pudełka x i wynik znikają.' },
+    { line: 8, vars: { 'a (main)': 3, 'b (main)': 16 }, note: 'Wywołanie kwadrat(a + 1) zamieniło się na 16 i trafiło do b.' },
+    { line: 9, vars: { 'a (main)': 3, 'b (main)': 16 }, out: '16\n' },
+  ]}
+/>
+
+## Przykład kodu
+
+Struktura, jakiej oczekuje egzaminator: każda czynność w osobnej metodzie, `main` tylko wszystkim steruje.
+
+```java title="Main.java" expect="Suma: 27"
+public class Main {
+
+    /** Wypisuje elementy tablicy w jednej linii. */
+    static void wypiszTablice(int[] liczby) {
+        for (int liczba : liczby) {
+            System.out.print(liczba + " ");
+        }
+        System.out.println();
+    }
+
+    /** Zwraca sumę elementów tablicy. */
+    static int policzSume(int[] liczby) {
+        int suma = 0;
+        for (int liczba : liczby) {
+            suma += liczba;
+        }
+        return suma;                         // wynik wraca do miejsca wywołania
+    }
+
+    /** Zwraca true, gdy liczba jest parzysta. */
+    static boolean czyParzysta(int liczba) {
+        return liczba % 2 == 0;              // wyrażenie logiczne samo jest wynikiem
+    }
+
+    /** Zwiększa każdy element tablicy o podaną wartość (zmienia oryginał!). */
+    static void zwiekszWszystkie(int[] liczby, int oIle) {
+        for (int i = 0; i < liczby.length; i++) {
+            liczby[i] += oIle;
+        }
+    }
+
+    public static void main(String[] args) {
+        int[] oczka = {3, 6, 1, 5, 2};
+
+        wypiszTablice(oczka);                            // 3 6 1 5 2
+        int suma = policzSume(oczka);                    // 17
+        System.out.println("Suma: " + suma);
+        System.out.println("Parzysta? " + czyParzysta(suma));
+
+        zwiekszWszystkie(oczka, 2);                      // tablica przekazana przez referencję
+        wypiszTablice(oczka);                            // 5 8 3 7 4: zmiana widoczna w main
+        System.out.println("Suma: " + policzSume(oczka)); // 27
+    }
+}
+```
+
+## Najczęstsze błędy
+
+<Mistake title="Brak return w metodzie, która ma coś zwrócić">
+
+```java check="error"
+static int najwieksza(int a, int b) {
+    if (a > b) {
+        return a;
+    }
+}
+```
+
+`missing return statement`. Każda możliwa ścieżka musi kończyć się `return`. Tu brakuje przypadku, gdy `a <= b`.
+</Mistake>
+
+<Mistake title="Wynik metody wyrzucony do kosza">
+`policzSume(oczka);` w osobnej linii liczy sumę i… nic z nią nie robi. Wynik trzeba **odebrać**: `int suma = policzSume(oczka);`.
+</Mistake>
+
+<Mistake title="Brak static przy wywołaniu z main">
+
+```java check="error"
+int podwoj(int x) {
+    return 2 * x;
+}
+static void test() {
+    int y = podwoj(4);
+}
+```
+
+`non-static method podwoj(int) cannot be referenced from a static context`. Metody wywoływane bezpośrednio z `main` muszą być `static` (albo wywołane na obiekcie, lekcja 1.10).
+</Mistake>
+
+<Mistake title="Liczenie w metodzie i wypisywanie zamiast zwracania">
+Arkusz mówi: „metoda **zwraca** sumę”. Jeśli metoda wypisuje sumę i jest `void`, kryterium nie jest spełnione. Czytaj uważnie: **zwraca** = `return`, **wyświetla** = `println`.
+</Mistake>
+
+<Mistake title="Kod po return">
+Instrukcje po `return` nigdy się nie wykonają, a kompilator zgłosi `unreachable statement`.
+</Mistake>
+
+## Trik na zapamiętanie
+
+<Trick title="WE → co robi → WY">
+Zanim napiszesz metodę, odpowiedz na trzy pytania:
+
+1. **Co wchodzi?** → parametry (`int[] liczby`)
+2. **Co robi?** → nazwa jako czasownik (`policzSume`)
+3. **Co wychodzi?** → typ zwracany (`int`), a jeśli nic, to `void`
+
+Zapisz to jako pierwszą linijkę i dopiero potem wypełniaj środek. To dokładnie te same informacje, które wpisujesz w nagłówek dokumentacji na egzaminie: **parametry, opis, zwracany typ**.
+
+Metoda `czy...()` zawsze zwraca `boolean` i często ma jedną linijkę: `return warunek;`.
+</Trick>
+
+## Zadania
+
+<Task id="j1-8-1" title="Pole koła i prostokąta" level="łatwe" minutes={10}>
+Napisz dwie przeciążone metody `pole`: dla koła (promień) i dla prostokąta (dwa boki). W `main` wypisz pole koła o promieniu 2 (z 2 miejscami po przecinku: `12.57`) i prostokąta 3 × 4 (`12.0`).
+
+<Hint>Obie metody nazywają się `pole` i zwracają `double`. Różnią się liczbą parametrów.</Hint>
+<Hint>π masz w `Math.PI`. Formatowanie: `printf("%.2f%n", pole(2))`.</Hint>
+<Solution>
+
+```java title="Main.java" expect="12.57\n12.0"
+public class Main {
+    static double pole(double promien) {
+        return Math.PI * promien * promien;
+    }
+
+    static double pole(double a, double b) {
+        return a * b;
+    }
+
+    public static void main(String[] args) {
+        System.out.printf("%.2f%n", pole(2));      // jeden argument: koło
+        System.out.println(pole(3, 4));            // dwa argumenty: prostokąt
+    }
+}
+```
+</Solution>
+</Task>
+
+<Task id="j1-8-2" title="Czy pierwsza?" level="średnie" minutes={15}>
+Napisz `static boolean czyPierwsza(int n)`. Liczba pierwsza jest większa od 1 i dzieli się tylko przez 1 i przez samą siebie. W `main` wypisz wszystkie liczby pierwsze od 1 do 50.
+
+<Hint>Najpierw strażnik: liczby mniejsze od 2 nie są pierwsze, więc od razu `return false`.</Hint>
+<Hint>Sprawdzaj dzielniki od 2. Gdy znajdziesz pierwszy dzielnik (`n % d == 0`), od razu `return false`.</Hint>
+<Hint>Wystarczy sprawdzać dzielniki, dopóki `d * d <= n`. Jeśli pętla się skończy i nic nie znaleziono, `return true`.</Hint>
+<Solution>
+
+```java title="Main.java" expect="2 3 5 7 11 13 17 19 23 29 31 37 41 43 47"
+public class Main {
+    static boolean czyPierwsza(int n) {
+        if (n < 2) {
+            return false;
+        }
+        for (int dzielnik = 2; dzielnik * dzielnik <= n; dzielnik++) {
+            if (n % dzielnik == 0) {
+                return false;              // znalazłem dzielnik: na pewno nie pierwsza
+            }
+        }
+        return true;                       // żaden dzielnik nie pasował
+    }
+
+    public static void main(String[] args) {
+        for (int i = 1; i <= 50; i++) {
+            if (czyPierwsza(i)) {
+                System.out.print(i + " ");
+            }
+        }
+        System.out.println();
+    }
+}
+```
+
+**Dlaczego do pierwiastka:** jeśli n = a · b i oba czynniki byłyby większe od √n, ich iloczyn byłby większy od n. Więc mniejszy dzielnik zawsze jest ≤ √n.
+</Solution>
+</Task>
+
+<Task id="j1-8-3" title="Rok przestępny jeszcze raz" level="średnie" minutes={15}>
+Przepisz zadanie z lekcji 1.3 porządnie: metoda `czyPrzestepny(int rok)` i metoda `dniWMiesiacu(int miesiac, int rok)`, która zwraca 28/29/30/31. Wypisz liczbę dni lutego 2024 i 2027 oraz kwietnia 2027.
+
+<Hint>`dniWMiesiacu` może wywołać `czyPrzestepny`. Metody mogą korzystać z siebie nawzajem.</Hint>
+<Hint>Użyj `switch` zwracającego wartość: miesiące 4, 6, 9, 11 mają 30 dni, luty to `czyPrzestepny(rok) ? 29 : 28`, reszta 31.</Hint>
+<Solution>
+
+```java title="Main.java" expect="29\n28\n30"
+public class Main {
+    static boolean czyPrzestepny(int rok) {
+        return (rok % 4 == 0 && rok % 100 != 0) || rok % 400 == 0;
+    }
+
+    static int dniWMiesiacu(int miesiac, int rok) {
+        return switch (miesiac) {
+            case 2 -> czyPrzestepny(rok) ? 29 : 28;   // metoda woła metodę
+            case 4, 6, 9, 11 -> 30;
+            default -> 31;
+        };
+    }
+
+    public static void main(String[] args) {
+        System.out.println(dniWMiesiacu(2, 2024));
+        System.out.println(dniWMiesiacu(2, 2027));
+        System.out.println(dniWMiesiacu(4, 2027));
+    }
+}
+```
+
+**Dlaczego tak:** zamiast czterech kopii długiego warunku masz jedną metodę z czytelną nazwą. Gdyby w warunku był błąd, poprawiasz go w jednym miejscu.
+</Solution>
+</Task>
+
+<Task id="j1-8-4" title="Program w stylu arkusza" level="egzamin" minutes={20}>
+Napisz program złożony z metod (bez zmiennych poza metodami):
+
+- `wczytajLiczby(Scanner sc, int ile)`: pyta użytkownika o `ile` liczb i **zwraca** tablicę,
+- `policzParzyste(int[] liczby)`: **zwraca** liczbę elementów parzystych,
+- `najwieksza(int[] liczby)`: **zwraca** największy element,
+- `main`: pyta, ile liczb, wywołuje metody i wypisuje wyniki z opisami.
+
+<Hint>Metoda może zwrócić tablicę: `static int[] wczytajLiczby(Scanner sc, int ile)`. W środku `new int[ile]`, pętla, `return liczby;`.</Hint>
+<Hint>Scanner tworzysz raz, w `main`, i przekazujesz go parametrem. Dwa Scannery czytające z klawiatury potrafią sobie nawzajem „podkradać” dane.</Hint>
+<Hint>`najwieksza`: zacznij od `liczby[0]` i porównuj od indeksu 1.</Hint>
+<Solution>
+
+```java title="Main.java" stdin="4\n7 2 9 4" expect="Parzystych: 2\nNajwiększa: 9"
+import java.util.Scanner;
+
+public class Main {
+
+    static int[] wczytajLiczby(Scanner sc, int ile) {   // Scanner przychodzi z main
+        int[] liczby = new int[ile];
+        for (int i = 0; i < ile; i++) {
+            System.out.print("Liczba " + (i + 1) + ": ");
+            liczby[i] = sc.nextInt();
+        }
+        return liczby;                              // oddaję całą tablicę
+    }
+
+    static int policzParzyste(int[] liczby) {
+        int licznik = 0;
+        for (int liczba : liczby) {
+            if (liczba % 2 == 0) {
+                licznik++;
+            }
+        }
+        return licznik;
+    }
+
+    static int najwieksza(int[] liczby) {
+        int maksimum = liczby[0];
+        for (int i = 1; i < liczby.length; i++) {
+            if (liczby[i] > maksimum) {
+                maksimum = liczby[i];
+            }
+        }
+        return maksimum;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Ile liczb chcesz podać? ");
+        int ile = sc.nextInt();
+
+        int[] liczby = wczytajLiczby(sc, ile);
+        System.out.println();
+        System.out.println("Parzystych: " + policzParzyste(liczby));
+        System.out.println("Największa: " + najwieksza(liczby));
+    }
+}
+```
+
+**Dlaczego tak:** `main` tylko steruje, a każda czynność ma swoją metodę z nazwą-czasownikiem. Egzaminator od razu widzi „osobną metodę liczącą” i „osobną metodę zwracającą”.
+</Solution>
+</Task>

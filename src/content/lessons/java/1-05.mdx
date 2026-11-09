@@ -1,0 +1,348 @@
+<Why>
+Program bez warunków robi zawsze to samo. Warunki pozwalają mu **reagować**: „jeśli liczba kostek jest spoza zakresu, zapytaj jeszcze raz”, „jeśli hasła się nie zgadzają, pokaż komunikat”. Każdy arkusz INF.04 ma takie decyzje w konsoli i w GUI.
+</Why>
+
+## Teoria krok po kroku
+
+### 1. if i else
+
+<Analogy>
+Rozjazd na torach. Pociąg (program) dojeżdża do zwrotnicy (`if`). Jeśli warunek jest prawdziwy, jedzie w lewo. Jeśli nie, w prawo (`else`). Nigdy nie jedzie oboma torami naraz.
+</Analogy>
+
+```java check="body"
+int wiek = 17;
+if (wiek >= 18) {                         // warunek w nawiasie, musi dać boolean
+    System.out.println("Pełnoletni");     // wykona się, gdy warunek = true
+} else {
+    System.out.println("Niepełnoletni");  // wykona się, gdy warunek = false
+}
+```
+
+`else` jest opcjonalny. Bez niego, gdy warunek jest fałszywy, program po prostu idzie dalej.
+
+### 2. Łańcuch else if
+
+Gdy możliwości jest więcej niż dwie, łączysz je w łańcuch. Java sprawdza warunki **od góry** i wykonuje **tylko pierwszy pasujący**. Resztę pomija. Dlatego kolejność ma znaczenie: od najbardziej szczegółowego do najbardziej ogólnego.
+
+### 3. Klamry zawsze
+
+Bez klamer do `if` należy **tylko jedna** następna instrukcja. Druga wykona się zawsze, nawet jeśli wcięcie sugeruje coś innego. Pisz klamry nawet przy jednej linii. Egzaminator ocenia czytelność (R.1.1).
+
+### 4. Zagnieżdżanie
+
+`if` może być w środku innego `if`. Przydaje się, gdy druga decyzja ma sens tylko po pierwszej, np. „jeśli dane są poprawne, to sprawdź, jaki to trójkąt”.
+
+### 5. switch
+
+Gdy porównujesz **jedną zmienną** z wieloma konkretnymi wartościami, `switch` jest czytelniejszy niż długi łańcuch `else if`.
+
+Nowa składnia (Java 14+), bez pułapek:
+
+```java check="body" expect="weekend"
+int dzien = 6;
+switch (dzien) {
+    case 1, 2, 3, 4, 5 -> System.out.println("dzień roboczy");
+    case 6, 7 -> System.out.println("weekend");
+    default -> System.out.println("nie ma takiego dnia");   // gdy nic nie pasuje
+}
+```
+
+Klasyczna składnia, którą zobaczysz w starszych materiałach i pytaniach testowych:
+
+```java check="body" expect="dobry"
+int ocena = 4;
+switch (ocena) {
+    case 5:
+        System.out.println("bardzo dobry");
+        break;                      // koniec: wyskakujemy ze switcha
+    case 4:
+        System.out.println("dobry");
+        break;
+    default:
+        System.out.println("inna ocena");
+}
+```
+
+`switch` działa też na napisach (`case "t" -> ...`) i znakach (`case 'a' -> ...`).
+
+### 6. Operator trójargumentowy ?:
+
+Skrót dla prostego `if/else`, który wybiera **wartość**:
+
+```java check="body" expect="nieparzysta"
+int n = 7;
+String opis = (n % 2 == 0) ? "parzysta" : "nieparzysta";
+System.out.println(opis);
+```
+
+Czytaj: „czy n jest parzyste? jeśli tak, to "parzysta", w przeciwnym razie "nieparzysta"”.
+
+### 7. Porównywanie napisów
+
+Napisy porównujesz metodą `equals`, **nigdy** przez `==`:
+
+```java check="body" stdin="t"
+Scanner sc = new Scanner(System.in);
+String odpowiedz = sc.next();
+if (odpowiedz.equals("t")) {             // porównuje treść
+    System.out.println("Gramy dalej");
+}
+if (odpowiedz.equalsIgnoreCase("T")) {   // bez względu na wielkość liter
+    System.out.println("Też pasuje");
+}
+```
+
+To dokładnie ten moment z arkusza 2024: „czy powtórzyć grę? t/n”.
+
+## Wizualizacja
+
+<Trace
+  title="Łańcuch else if dla 73 punktów"
+  code={`int punkty = 73;
+if (punkty >= 90) {
+    System.out.println("bardzo dobry");
+} else if (punkty >= 75) {
+    System.out.println("dobry");
+} else if (punkty >= 50) {
+    System.out.println("dostateczny");
+} else {
+    System.out.println("niedostateczny");
+}
+System.out.println("Koniec");`}
+  steps={[
+    { line: 1, vars: { punkty: 73 } },
+    { line: 2, vars: { punkty: 73 }, note: '73 >= 90? Nie. Przeskakujemy blok i idziemy do następnego warunku.' },
+    { line: 4, vars: { punkty: 73 }, note: '73 >= 75? Nie. Kolejny warunek.' },
+    { line: 6, vars: { punkty: 73 }, note: '73 >= 50? Tak! Wchodzimy do tego bloku.' },
+    { line: 7, vars: { punkty: 73 }, out: 'dostateczny\n' },
+    { line: 11, vars: { punkty: 73 }, out: 'Koniec\n', note: 'Po pierwszym pasującym bloku cała reszta łańcucha (łącznie z else) jest pomijana.' },
+  ]}
+/>
+
+## Przykład kodu
+
+```java title="Main.java" stdin="4"
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Podaj liczbę oczek (1-6): ");
+        int oczka = sc.nextInt();
+
+        if (oczka < 1 || oczka > 6) {                     // najpierw odrzucamy złe dane
+            System.out.println("Kostka nie ma takiej ściany.");
+        } else {
+            String slownie = switch (oczka) {             // switch może zwrócić wartość
+                case 1 -> "jeden";
+                case 2 -> "dwa";
+                case 3 -> "trzy";
+                case 4 -> "cztery";
+                case 5 -> "pięć";
+                default -> "sześć";                       // tu może być już tylko 6
+            };
+            String parzystosc = oczka % 2 == 0 ? "parzysta" : "nieparzysta";
+            System.out.println("Wyrzuciłeś " + slownie + " (" + parzystosc + ")");
+        }
+    }
+}
+```
+
+`switch` ze strzałkami może od razu **zwrócić wartość** do zmiennej. To idealne do „wartości słownie”, które pojawiły się w arkuszu ze stycznia 2026.
+
+## Najczęstsze błędy
+
+<Mistake title="Średnik po if">
+
+```java check="body" expect="Duża!"
+int x = 2;
+if (x > 5); {
+    System.out.println("Duża!");     // wypisze się, choć 2 nie jest > 5
+}
+```
+
+Średnik kończy instrukcję `if`. Blok w klamrach staje się zwykłym blokiem, który wykonuje się zawsze. Kod się kompiluje, ale działa źle.
+</Mistake>
+
+<Mistake title="= zamiast == w warunku">
+
+```java check="error"
+int x = 5;
+if (x = 5) {
+    System.out.println("pięć");
+}
+```
+
+`incompatible types: int cannot be converted to boolean`. W warunku potrzebujesz porównania `==`.
+</Mistake>
+
+<Mistake title="Napisy porównane przez ==">
+`if (odp == "t")` czasem działa, a czasem nie (zwłaszcza gdy napis przyszedł ze Scannera). Zawsze `odp.equals("t")`.
+</Mistake>
+
+<Mistake title="Zła kolejność w else if">
+Jeśli najpierw sprawdzisz `punkty >= 50`, a dopiero potem `punkty >= 90`, to 95 punktów da „dostateczny”, bo pierwszy pasujący warunek wygrywa. Ustawiaj progi od najwyższego.
+</Mistake>
+
+<Mistake title="Zapomniany break">
+W klasycznym switchu bez `break` wykonanie przelatuje do kolejnych `case`. W nowej składni ze strzałkami ten problem nie istnieje, dlatego warto jej używać.
+</Mistake>
+
+## Trik na zapamiętanie
+
+<Trick title="Najpierw odrzuć złe dane">
+Wzorzec „strażnika”: na początku sprawdź, czy dane są złe, i obsłuż ten przypadek. Potem zajmij się normalną pracą. Kod jest płaski i czytelny.
+
+```java check="body"
+int liczbaKostek = 5;
+if (liczbaKostek < 3 || liczbaKostek > 10) {
+    System.out.println("Liczba kostek musi być od 3 do 10.");
+} else {
+    // właściwa praca
+}
+```
+
+**Zakres „pomiędzy”** = `&&`, **„poza zakresem”** = <code>&#124;&#124;</code>. Pomiędzy to bycie w środku obu granic naraz, a poza zakresem to przekroczenie którejkolwiek.
+</Trick>
+
+## Zadania
+
+<Task id="j1-5-1" title="Opisz liczbę" level="łatwe" minutes={10}>
+Wczytaj liczbę całkowitą. Wypisz, czy jest dodatnia, ujemna czy zero, a w drugiej linii, czy jest parzysta (użyj operatora `?:`).
+
+<Hint>Trzy możliwości to `if`, `else if`, `else`.</Hint>
+<Hint>Parzystość: `liczba % 2 == 0 ? "parzysta" : "nieparzysta"`.</Hint>
+<Solution>
+
+```java title="Main.java" stdin="-8" expect="ujemna\nparzysta"
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Podaj liczbę całkowitą: ");
+        int liczba = sc.nextInt();
+
+        if (liczba > 0) {
+            System.out.println("dodatnia");
+        } else if (liczba < 0) {
+            System.out.println("ujemna");
+        } else {
+            System.out.println("zero");
+        }
+        System.out.println(liczba % 2 == 0 ? "parzysta" : "nieparzysta");
+    }
+}
+```
+
+**Dlaczego tak:** −8 % 2 daje 0, więc parzystość działa też dla ujemnych. (Za to −7 % 2 daje −1, a nie 1. Dlatego sprawdzaj `== 0`, a nie `== 1`.)
+</Solution>
+</Task>
+
+<Task id="j1-5-2" title="Największa z trzech" level="średnie" minutes={10}>
+Wczytaj trzy liczby całkowite i wypisz największą. Bez `Math.max`.
+
+<Hint>Załóż, że największa jest pierwsza. Zapisz ją w zmiennej `najwieksza`.</Hint>
+<Hint>Jeśli druga jest większa od `najwieksza`, podmień. To samo z trzecią. To zwykłe `if` bez `else`.</Hint>
+<Solution>
+
+```java title="Main.java" stdin="4\n17\n9" expect="Największa: 17"
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Podaj trzy liczby: ");
+        int a = sc.nextInt();
+        int b = sc.nextInt();
+        int c = sc.nextInt();
+
+        int najwieksza = a;              // zakładam, że pierwsza wygrywa
+        if (b > najwieksza) {
+            najwieksza = b;              // podmieniam, gdy znajdę większą
+        }
+        if (c > najwieksza) {
+            najwieksza = c;
+        }
+        System.out.println("Największa: " + najwieksza);
+    }
+}
+```
+
+**Dlaczego tak:** to szkielet „szukania maksimum”. Ten sam wzorzec, tylko w pętli, znajdzie największy element tablicy (lekcja 2.1, arkusz 2021).
+</Solution>
+</Task>
+
+<Task id="j1-5-3" title="Dzień tygodnia" level="średnie" minutes={10}>
+Wczytaj numer dnia 1–7 i wypisz jego nazwę (1 = poniedziałek). Dla innych liczb wypisz „Nie ma takiego dnia”. Użyj `switch`, który zwraca wartość do zmiennej.
+
+<Hint>`String nazwa = switch (numer) { case 1 -> "poniedziałek"; ... default -> "..."; };`</Hint>
+<Hint>Nie zapomnij o średniku po zamykającej klamrze switcha, bo to przypisanie.</Hint>
+<Solution>
+
+```java title="Main.java" stdin="3" expect="środa"
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Numer dnia (1-7): ");
+        int numer = sc.nextInt();
+
+        String nazwa = switch (numer) {
+            case 1 -> "poniedziałek";
+            case 2 -> "wtorek";
+            case 3 -> "środa";
+            case 4 -> "czwartek";
+            case 5 -> "piątek";
+            case 6 -> "sobota";
+            case 7 -> "niedziela";
+            default -> "Nie ma takiego dnia";
+        };                                            // średnik: koniec przypisania
+        System.out.println(nazwa);
+    }
+}
+```
+</Solution>
+</Task>
+
+<Task id="j1-5-4" title="Czy to trójkąt?" level="egzamin" minutes={20}>
+Wczytaj długości trzech odcinków (liczby całkowite). Jeśli któraś nie jest dodatnia, wypisz „Długości muszą być dodatnie”. W przeciwnym razie sprawdź warunek trójkąta (każdy bok jest krótszy od sumy dwóch pozostałych). Jeśli trójkąt istnieje, wypisz, czy jest **równoboczny**, **równoramienny** czy **różnoboczny**. Jeśli nie istnieje, wypisz „Z tych odcinków nie zbudujesz trójkąta”.
+
+<Hint>Najpierw „strażnik”: `a <= 0 || b <= 0 || c <= 0`.</Hint>
+<Hint>Warunek trójkąta to trzy porównania połączone `&&`: `a < b + c && b < a + c && c < a + b`.</Hint>
+<Hint>Kolejność: równoboczny (`a == b && b == c`) sprawdź przed równoramiennym (`a == b || b == c || a == c`), bo równoboczny też ma dwa równe boki.</Hint>
+<Solution>
+
+```java title="Main.java" stdin="5\n5\n8" expect="równoramienny"
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Podaj długości trzech odcinków: ");
+        int a = sc.nextInt();
+        int b = sc.nextInt();
+        int c = sc.nextInt();
+
+        if (a <= 0 || b <= 0 || c <= 0) {                       // strażnik
+            System.out.println("Długości muszą być dodatnie");
+        } else if (a < b + c && b < a + c && c < a + b) {       // warunek trójkąta
+            if (a == b && b == c) {                             // najpierw najbardziej szczegółowy
+                System.out.println("równoboczny");
+            } else if (a == b || b == c || a == c) {
+                System.out.println("równoramienny");
+            } else {
+                System.out.println("różnoboczny");
+            }
+        } else {
+            System.out.println("Z tych odcinków nie zbudujesz trójkąta");
+        }
+    }
+}
+```
+
+**Dlaczego tak:** zagnieżdżony `if` sprawdza typ trójkąta tylko wtedy, gdy wiadomo, że trójkąt istnieje. Gdyby kolejność była odwrotna, 5, 5, 5 zostałby uznany za równoramienny.
+</Solution>
+</Task>

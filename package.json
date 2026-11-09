@@ -1,0 +1,37 @@
+{
+  "name": "inf04-nauka",
+  "version": "1.0.0",
+  "description": "Strona do nauki na egzamin zawodowy INF.04",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check:java": "node scripts/check-java.mjs",
+    "build:single": "SINGLE=1 vite build --outDir dist-single"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@mdx-js/react": "^3.1.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-router-dom": "^7.18.5"
+  },
+  "devDependencies": {
+    "@mdx-js/rollup": "^3.1.1",
+    "@shikijs/rehype": "^4.6.0",
+    "@tailwindcss/vite": "^4.3.5",
+    "@vitejs/plugin-react": "^6.3.0",
+    "remark-gfm": "^4.0.1",
+    "shiki": "^4.6.0",
+    "tailwindcss": "^4.3.5",
+    "vite": "^8.3.6",
+    "vite-plugin-singlefile": "^2.3.4"
+  },
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.19"
+  }
+}

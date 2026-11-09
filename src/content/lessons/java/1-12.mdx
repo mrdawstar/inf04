@@ -1,0 +1,371 @@
+<Why>
+W części praktycznej dziedziczenie przydaje się rzadziej, ale w **teście teoretycznym** pytania o polimorfizm, klasy abstrakcyjne i różnicę między przeciążaniem a nadpisywaniem padają regularnie. Do tego w Androidzie twoja `MainActivity` **dziedziczy** po `AppCompatActivity`, a `onCreate` to metoda **nadpisana**. Bez tej lekcji tamten kod będzie magią.
+</Why>
+
+## Teoria krok po kroku
+
+### 1. Dziedziczenie: „jest rodzajem”
+
+<Analogy>
+Pies **jest rodzajem** zwierzęcia. Każde zwierzę ma imię i potrafi jeść. Pies dostaje to „w spadku” i dokłada coś swojego: aportowanie. Nie musisz drugi raz pisać, jak je pies, bo odziedziczył to po zwierzęciu.
+</Analogy>
+
+```java check="types"
+class Zwierze {                               // klasa bazowa (rodzic, nadklasa)
+    protected String imie;                    // protected: widoczne też w klasach pochodnych
+
+    public Zwierze(String imie) {
+        this.imie = imie;
+    }
+
+    public void jedz() {
+        System.out.println(imie + " je.");
+    }
+}
+
+class Pies extends Zwierze {                  // Pies dziedziczy po Zwierze
+    public Pies(String imie) {
+        super(imie);                          // wywołanie konstruktora rodzica: PIERWSZA linia
+    }
+
+    public void aportuj() {                   // nowa metoda, tylko psy ją mają
+        System.out.println(imie + " przynosi patyk.");
+    }
+}
+```
+
+Pies ma teraz `imie`, `jedz()` (odziedziczone) i `aportuj()` (własne). Test: jeśli zdanie „X **jest rodzajem** Y” brzmi sensownie, dziedziczenie ma sens.
+
+### 2. super
+
+- `super(...)` w konstruktorze: wywołuje konstruktor klasy bazowej. Musi być pierwszą instrukcją.
+- `super.metoda()`: wywołuje wersję metody z klasy bazowej (przydaje się, gdy nadpisujesz metodę, ale chcesz dołożyć coś do oryginału).
+
+### 3. Nadpisywanie i @Override
+
+Klasa pochodna może **zmienić** zachowanie odziedziczonej metody. Piszesz metodę o **tej samej nazwie i tych samych parametrach** i dodajesz `@Override`:
+
+```java check="types"
+class Zwierze {
+    public String dajGlos() { return "..."; }
+}
+class Kot extends Zwierze {
+    @Override                                  // „nadpisuję metodę rodzica”
+    public String dajGlos() { return "Miau!"; }
+}
+```
+
+`@Override` nie jest obowiązkowe, ale chroni przed literówką. Jeśli pomylisz nazwę, kompilator zgłosi błąd zamiast po cichu stworzyć nową metodę.
+
+| | Przeciążanie (overloading) | Nadpisywanie (overriding) |
+|---|---|---|
+| Gdzie | ta sama klasa | klasa pochodna |
+| Nazwa | ta sama | ta sama |
+| Parametry | **inne** | **takie same** |
+| Kiedy wybierana wersja | podczas kompilacji | podczas działania (polimorfizm) |
+| Przykład | `pole(r)` i `pole(a, b)` | `toString()`, `onCreate()` |
+
+### 4. Polimorfizm
+
+Zmienna typu bazowego może wskazywać obiekt klasy pochodnej: `Zwierze z = new Kot();`. Gdy wywołasz `z.dajGlos()`, wykona się wersja **prawdziwego obiektu** (Kot), a nie typu zmiennej. Dzięki temu jedna pętla obsłuży różne zwierzęta.
+
+<Analogy>
+Dyrygent mówi do całej orkiestry: „grajcie!”. Każdy muzyk gra po swojemu: skrzypek na skrzypcach, saksofonista na saksofonie. Dyrygent nie musi wiedzieć, kto na czym gra. Polecenie jest jedno, a wykonań wiele.
+</Analogy>
+
+### 5. Klasa abstrakcyjna
+
+Czasem klasa bazowa jest zbyt ogólna, żeby tworzyć jej obiekty. Nie ma „figury w ogóle”, są koła i prostokąty.
+
+```java check="types"
+abstract class Figura {                        // nie da się zrobić new Figura()
+    public abstract double pole();             // metoda bez ciała: każda podklasa MUSI ją napisać
+
+    public void opisz() {                      // klasa abstrakcyjna może mieć zwykłe metody
+        System.out.printf("Pole: %.2f%n", pole());
+    }
+}
+```
+
+### 6. Interfejs
+
+Interfejs to **kontrakt**: lista metod, które klasa obiecuje mieć. Klasa może dziedziczyć tylko po **jednej** klasie, ale implementować **wiele** interfejsów:
+
+```java check="types"
+interface Grajacy {
+    void graj();                               // domyślnie public i abstract
+}
+
+class Saksofon implements Grajacy {
+    @Override
+    public void graj() {
+        System.out.println("Saksofon gra solo.");
+    }
+}
+```
+
+W Androidzie zobaczysz to przy kliknięciach: `View.OnClickListener` to interfejs z jedną metodą `onClick`.
+
+### 7. Object: przodek wszystkich
+
+Każda klasa niejawnie dziedziczy po `Object`. Stąd każda ma `toString()`, `equals()` i `hashCode()`, które możesz nadpisać.
+
+## Wizualizacja
+
+<Trace
+  title="Polimorfizm: jedna pętla, różne zachowania"
+  code={`Zwierze[] zoo = { new Pies("Burek"), new Kot("Filemon"), new Pies("Azor") };
+for (Zwierze z : zoo) {
+    System.out.println(z.dajGlos());
+}`}
+  steps={[
+    { line: 1, vars: { zoo: ['Pies Burek', 'Kot Filemon', 'Pies Azor'] }, note: 'Tablica typu Zwierze, a w środku różne rodzaje zwierząt.' },
+    { line: 2, vars: { zoo: ['Pies Burek', 'Kot Filemon', 'Pies Azor'], z: 'Pies Burek' }, hl: { zoo: 0 }, note: 'Zmienna z ma typ Zwierze, ale wskazuje psa.' },
+    { line: 3, vars: { zoo: ['Pies Burek', 'Kot Filemon', 'Pies Azor'], z: 'Pies Burek' }, hl: { zoo: 0 }, out: 'Burek: Hau!\n', note: 'Java sprawdza, jakim obiektem NAPRAWDĘ jest z, i woła wersję z klasy Pies.' },
+    { line: 2, vars: { zoo: ['Pies Burek', 'Kot Filemon', 'Pies Azor'], z: 'Kot Filemon' }, hl: { zoo: 1 } },
+    { line: 3, vars: { zoo: ['Pies Burek', 'Kot Filemon', 'Pies Azor'], z: 'Kot Filemon' }, hl: { zoo: 1 }, out: 'Filemon: Miau!\n', note: 'Ta sama linijka kodu, inne zachowanie. To jest polimorfizm.' },
+    { line: 2, vars: { zoo: ['Pies Burek', 'Kot Filemon', 'Pies Azor'], z: 'Pies Azor' }, hl: { zoo: 2 } },
+    { line: 3, vars: { zoo: ['Pies Burek', 'Kot Filemon', 'Pies Azor'], z: 'Pies Azor' }, hl: { zoo: 2 }, out: 'Azor: Hau!\n' },
+  ]}
+/>
+
+## Przykład kodu
+
+```java title="Main.java" expect="Filemon: Miau!"
+abstract class Zwierze {
+    protected String imie;
+
+    public Zwierze(String imie) {
+        this.imie = imie;
+    }
+
+    public abstract String dzwiek();                  // każde zwierzę wydaje inny dźwięk
+
+    public String dajGlos() {                         // wspólna logika w klasie bazowej
+        return imie + ": " + dzwiek();
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " " + imie;   // nazwa klasy, np. "Pies"
+    }
+}
+
+class Pies extends Zwierze {
+    public Pies(String imie) {
+        super(imie);
+    }
+
+    @Override
+    public String dzwiek() {
+        return "Hau!";
+    }
+}
+
+class Kot extends Zwierze {
+    public Kot(String imie) {
+        super(imie);
+    }
+
+    @Override
+    public String dzwiek() {
+        return "Miau!";
+    }
+
+    @Override
+    public String dajGlos() {
+        return super.dajGlos() + " (i się przeciąga)";   // rozszerzam wersję rodzica
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Zwierze[] zoo = { new Pies("Burek"), new Kot("Filemon") };
+        for (Zwierze z : zoo) {
+            System.out.println(z + " -> " + z.dajGlos());
+        }
+    }
+}
+```
+
+## Najczęstsze błędy
+
+<Mistake title="Brak super(...) przy rodzicu bez konstruktora bezparametrowego">
+
+```java check="error"
+class Zwierze {
+    Zwierze(String imie) { }
+}
+class Pies extends Zwierze {
+    Pies() { }
+}
+```
+
+Java próbuje niejawnie wywołać `super()` bez argumentów, a takiego konstruktora nie ma. Napisz `super("Burek");` jako pierwszą linię.
+</Mistake>
+
+<Mistake title="Tworzenie obiektu klasy abstrakcyjnej">
+
+```java check="error"
+abstract class Figura { }
+class Test {
+    void f() { Figura f = new Figura(); }
+}
+```
+
+`Figura is abstract; cannot be instantiated`. Twórz obiekty klas pochodnych: `Figura f = new Kolo(2);`.
+</Mistake>
+
+<Mistake title="Literówka w nazwie nadpisywanej metody">
+`public String tostring()` (małe s) to **nowa** metoda, a nie nadpisanie `toString()`. Bez `@Override` kompilator nic nie powie, a `println` dalej wypisze `Pies@1b6d3586`. Z `@Override` od razu dostaniesz błąd.
+</Mistake>
+
+<Mistake title="Metoda tylko z klasy pochodnej na zmiennej bazowej">
+`Zwierze z = new Pies("Burek"); z.aportuj();` się nie skompiluje. Kompilator patrzy na typ **zmiennej** (Zwierze), a zwierzę w ogóle nie umie aportować. Polimorfizm działa tylko dla metod, które ma klasa bazowa.
+</Mistake>
+
+## Trik na zapamiętanie
+
+<Trick title="Cztery filary: HDPA">
+**H**ermetyzacja (private + gettery), **D**ziedziczenie (extends), **P**olimorfizm (@Override, jedna nazwa, wiele zachowań), **A**bstrakcja (abstract, interface). Zapamiętaj: **„Hej, Dawid, Podaj Alta”** (saksofon altowy).
+
+**PRZEciążanie = PRZEróżne parametry.** **NADpisywanie = NADklasa ma tę metodę, a ty ją podmieniasz.**
+</Trick>
+
+## Zadania
+
+<Task id="j1-12-1" title="Pracownik i kierownik" level="średnie" minutes={15}>
+Klasa `Pracownik` (imię, pensja bazowa) z metodą `wyplata()` zwracającą pensję. Klasa `Kierownik` dziedziczy po niej, ma dodatkowe pole `dodatek` i nadpisuje `wyplata()` tak, żeby zwracała pensję + dodatek (użyj `super.wyplata()`). W `main` utwórz tablicę `Pracownik[]` z jednym pracownikiem (4000) i jednym kierownikiem (5000 + 1500) i wypisz łączną sumę wypłat (10500.0).
+
+<Hint>Konstruktor kierownika: `super(imie, pensja); this.dodatek = dodatek;`.</Hint>
+<Hint>`return super.wyplata() + dodatek;`</Hint>
+<Solution>
+
+```java title="Main.java" expect="Suma wypłat: 10500.0"
+class Pracownik {
+    protected String imie;
+    protected double pensja;
+
+    public Pracownik(String imie, double pensja) {
+        this.imie = imie;
+        this.pensja = pensja;
+    }
+
+    public double wyplata() {
+        return pensja;
+    }
+}
+
+class Kierownik extends Pracownik {
+    private double dodatek;
+
+    public Kierownik(String imie, double pensja, double dodatek) {
+        super(imie, pensja);
+        this.dodatek = dodatek;
+    }
+
+    @Override
+    public double wyplata() {
+        return super.wyplata() + dodatek;          // wersja rodzica + coś ekstra
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Pracownik[] zespol = { new Pracownik("Ola", 4000), new Kierownik("Dawid", 5000, 1500) };
+        double suma = 0;
+        for (Pracownik p : zespol) {
+            suma += p.wyplata();                   // polimorfizm: dla kierownika jego wersja
+        }
+        System.out.println("Suma wypłat: " + suma);
+    }
+}
+```
+</Solution>
+</Task>
+
+<Task id="j1-12-2" title="Figury" level="średnie" minutes={20}>
+Abstrakcyjna klasa `Figura` z abstrakcyjną metodą `double pole()`. Klasy `Kolo` (promień) i `Prostokat` (a, b). W `main` utwórz tablicę trzech figur, wypisz pole każdej (2 miejsca po przecinku) i wskaż figurę o największym polu.
+
+<Hint>W klasie `Figura` dodaj metodę `abstract String nazwa();` albo nadpisz `toString()` w każdej podklasie.</Hint>
+<Hint>Szukanie największej: zapamiętuj **obiekt** (`Figura najwieksza = figury[0];`), a nie tylko liczbę.</Hint>
+<Solution>
+
+```java title="Main.java" expect="Największe pole: koło r=3.0"
+abstract class Figura {
+    public abstract double pole();
+}
+
+class Kolo extends Figura {
+    private double promien;
+    public Kolo(double promien) { this.promien = promien; }
+    @Override public double pole() { return Math.PI * promien * promien; }
+    @Override public String toString() { return "koło r=" + promien; }
+}
+
+class Prostokat extends Figura {
+    private double a, b;
+    public Prostokat(double a, double b) { this.a = a; this.b = b; }
+    @Override public double pole() { return a * b; }
+    @Override public String toString() { return "prostokąt " + a + "x" + b; }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Figura[] figury = { new Kolo(1), new Prostokat(4, 5), new Kolo(3) };
+        Figura najwieksza = figury[0];
+        for (Figura f : figury) {
+            System.out.printf("%s: %.2f%n", f, f.pole());
+            if (f.pole() > najwieksza.pole()) {
+                najwieksza = f;
+            }
+        }
+        System.out.println("Największe pole: " + najwieksza);
+    }
+}
+```
+</Solution>
+</Task>
+
+<Task id="j1-12-3" title="Interfejs płatności" level="średnie" minutes={15}>
+Interfejs `Platnosc` z metodą `double prowizja(double kwota)`. Klasy `Karta` (prowizja 1% kwoty) i `Gotowka` (0 zł) go implementują. Napisz statyczną metodę `zaplac(Platnosc sposob, double kwota)`, która wypisuje kwotę razem z prowizją. Zapłać 200 zł kartą (202.00) i gotówką (200.00).
+
+<Hint>`class Karta implements Platnosc { @Override public double prowizja(double kwota) { return kwota * 0.01; } }`</Hint>
+<Hint>Parametr typu interfejsu przyjmie obiekt każdej klasy, która go implementuje.</Hint>
+<Solution>
+
+```java title="Main.java" expect="Do zapłaty: 202.00 zł\nDo zapłaty: 200.00 zł"
+interface Platnosc {
+    double prowizja(double kwota);
+}
+
+class Karta implements Platnosc {
+    @Override
+    public double prowizja(double kwota) {
+        return kwota * 0.01;
+    }
+}
+
+class Gotowka implements Platnosc {
+    @Override
+    public double prowizja(double kwota) {
+        return 0;
+    }
+}
+
+public class Main {
+    static void zaplac(Platnosc sposob, double kwota) {
+        double razem = kwota + sposob.prowizja(kwota);
+        System.out.printf("Do zapłaty: %.2f zł%n", razem);
+    }
+
+    public static void main(String[] args) {
+        zaplac(new Karta(), 200);
+        zaplac(new Gotowka(), 200);
+    }
+}
+```
+
+**Dlaczego tak:** metoda `zaplac` nie wie i nie musi wiedzieć, jak działa karta. Zna tylko kontrakt `Platnosc`. Dodanie BLIKA to nowa klasa, bez zmiany `zaplac`.
+</Solution>
+</Task>

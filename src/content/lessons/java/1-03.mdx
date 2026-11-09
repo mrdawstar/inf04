@@ -1,0 +1,258 @@
+<Why>
+Operatory to „czasowniki” programu: dodaj, porównaj, sprawdź warunek. Najważniejszy z nich na egzaminie to `%`, czyli reszta z dzielenia. Siedzi w parzystości, cyfrach PESEL, szyfrze Cezara i systemach liczbowych.
+</Why>
+
+## Teoria krok po kroku
+
+### 1. Arytmetyka
+
+| Operator | Znaczenie | Przykład | Wynik |
+|---|---|---|---|
+| `+` | dodawanie (albo sklejanie tekstu) | `7 + 2` | `9` |
+| `-` | odejmowanie | `7 - 2` | `5` |
+| `*` | mnożenie | `7 * 2` | `14` |
+| `/` | dzielenie (int przez int obcina!) | `7 / 2` | `3` |
+| `%` | reszta z dzielenia | `7 % 2` | `1` |
+
+Kolejność działań jak w matematyce: najpierw `*`, `/`, `%`, potem `+`, `-`. Nawiasy zmieniają kolejność. Jeśli nie jesteś pewien, **dodaj nawias**. Nigdy nie zaszkodzi.
+
+### 2. Reszta z dzielenia `%`
+
+<Analogy>
+Masz 17 cukierków i rozdajesz po 5 każdemu koledze. Trzech kolegów dostanie po 5 (`17 / 5 = 3`), a tobie zostaną 2 (`17 % 5 = 2`).
+</Analogy>
+
+Do czego to się przydaje:
+
+- `n % 2 == 0`: liczba parzysta,
+- `n % 10`: ostatnia cyfra liczby (4729 % 10 = 9),
+- `n / 10`: liczba bez ostatniej cyfry (4729 / 10 = 472),
+- `a % b == 0`: a dzieli się przez b,
+- „zawijanie” po końcu alfabetu w szyfrze Cezara: `(pozycja + przesuniecie) % 26`.
+
+### 3. Skróty przypisania
+
+| Zapis | To samo co |
+|---|---|
+| `suma += x;` | `suma = suma + x;` |
+| `n -= 2;` | `n = n - 2;` |
+| `iloczyn *= i;` | `iloczyn = iloczyn * i;` |
+| `n /= 10;` | `n = n / 10;` |
+| `licznik++;` | `licznik = licznik + 1;` |
+| `licznik--;` | `licznik = licznik - 1;` |
+
+`i++` (postinkrementacja) najpierw oddaje starą wartość, a potem zwiększa. `++i` (preinkrementacja) najpierw zwiększa. W osobnej linii nie ma różnicy, ale w teście padają podchwytliwe pytania. Zobacz wizualizację.
+
+### 4. Porównania
+
+Wynikiem porównania jest zawsze `boolean`: `true` albo `false`.
+
+`==` równe, `!=` różne, `<` mniejsze, `<=` mniejsze lub równe, `>` większe, `>=` większe lub równe.
+
+Pojedynczy znak `=` to przypisanie, podwójny `==` to pytanie „czy równe?”.
+
+### 5. Operatory logiczne
+
+| Operator | Nazwa | Prawda, gdy... |
+|---|---|---|
+| `&&` | i (AND) | **oba** warunki są prawdziwe |
+| <code>&#124;&#124;</code> | lub (OR) | **co najmniej jeden** warunek jest prawdziwy |
+| `!` | nie (NOT) | warunek jest fałszywy |
+
+<Analogy>
+Do kina wejdziesz, jeśli masz bilet **i** maseczkę (`&&`): potrzebne jedno i drugie. Zapłacisz, jeśli masz gotówkę **lub** kartę (<code>&#124;&#124;</code>): wystarczy jedno.
+</Analogy>
+
+**Skrócone obliczanie:** jeśli przy `&&` pierwszy warunek jest fałszywy, Java nie sprawdza drugiego, bo i tak wyjdzie fałsz. To bardzo przydatne: `i < t.length && t[i] != x` najpierw sprawdza, czy indeks jest w tablicy, i dzięki temu nigdy nie wyjdzie poza nią.
+
+## Wizualizacja
+
+<Trace
+  title="a++ kontra ++a"
+  code={`int a = 5;
+int b = a++;
+int c = ++a;
+System.out.println(a + " " + b + " " + c);`}
+  steps={[
+    { line: 1, vars: { a: 5 }, note: 'Startujemy od 5.' },
+    { line: 2, vars: { a: 6, b: 5 }, note: 'a++: b dostaje STARĄ wartość (5), a dopiero potem a rośnie do 6.' },
+    { line: 3, vars: { a: 7, b: 5, c: 7 }, note: '++a: najpierw a rośnie do 7, a c dostaje NOWĄ wartość (7).' },
+    { line: 4, vars: { a: 7, b: 5, c: 7 }, out: '7 5 7\n', note: 'Plus przed zmienną: najpierw zwiększ. Plus za zmienną: najpierw oddaj.' },
+  ]}
+/>
+
+## Przykład kodu
+
+```java title="Main.java" expect="Ostatnia cyfra: 9"
+public class Main {
+    public static void main(String[] args) {
+        int liczba = 4729;
+
+        int ostatniaCyfra = liczba % 10;          // 9
+        int bezOstatniej = liczba / 10;           // 472
+        boolean czyParzysta = liczba % 2 == 0;    // false: porównanie daje boolean
+
+        System.out.println("Ostatnia cyfra: " + ostatniaCyfra);
+        System.out.println("Bez ostatniej cyfry: " + bezOstatniej);
+        System.out.println("Parzysta? " + czyParzysta);
+
+        int oczka = 4;
+        boolean poprawnyRzut = oczka >= 1 && oczka <= 6;   // oba warunki naraz
+        boolean skrajny = oczka == 1 || oczka == 6;        // wystarczy jeden
+        System.out.println("Poprawny rzut: " + poprawnyRzut + ", skrajny: " + skrajny);
+
+        int punkty = 10;
+        punkty += 5;                              // 15
+        punkty *= 2;                              // 30
+        punkty--;                                 // 29
+        System.out.println("Punkty: " + punkty);
+    }
+}
+```
+
+## Najczęstsze błędy
+
+<Mistake title="Matematyczny zapis przedziału">
+
+```java check="error"
+int x = 4;
+boolean ok = 1 <= x <= 6;
+```
+
+Java liczy `1 <= x` i wychodzi `true`, a potem próbuje porównać `true <= 6`. To się nie kompiluje. Poprawnie: `x >= 1 && x <= 6`.
+</Mistake>
+
+<Mistake title="|| zamiast &&">
+`x >= 1 || x <= 6` jest prawdziwe **dla każdej liczby**: 100 jest ≥ 1, a −5 jest ≤ 6. Gdy liczba ma być „pomiędzy”, potrzebujesz `&&`.
+</Mistake>
+
+<Mistake title="Sklejanie zamiast dodawania">
+`"Suma: " + a + b` przy a = 2, b = 3 wypisze `Suma: 23`. Gdy po lewej stronie jest tekst, `+` skleja. Pisz `"Suma: " + (a + b)`.
+</Mistake>
+
+<Mistake title="Reszta z liczby ujemnej">
+W Javie `-7 % 3` daje `-1`, a nie `2`. W szyfrze Cezara z ujemnym kluczem trzeba to obejść: `((x % 26) + 26) % 26`.
+</Mistake>
+
+## Trik na zapamiętanie
+
+<Trick title="/ mówi „ile pełnych”, % mówi „ile zostało”">
+Za każdym razem, gdy widzisz w zadaniu słowa **cyfra, parzysta, podzielna, co który, reszta, zawijanie**, sięgaj po `%`.
+
+Szkielet „rozbierania” liczby na cyfry, który wróci w wielu algorytmach:
+
+```java check="body"
+int n = 583;
+int ostatnia = n % 10;   // weź ostatnią cyfrę
+n = n / 10;              // odetnij ją
+```
+</Trick>
+
+## Zadania
+
+<Task id="j1-3-1" title="Rozbierz liczbę" level="łatwe" minutes={10}>
+Dla `int liczba = 583;` wypisz osobno cyfrę setek, dziesiątek i jedności, a potem sumę cyfr. Oczekiwany wynik: `5 8 3`, a w drugiej linii `Suma cyfr: 16`.
+
+<Hint>Jedności to reszta z dzielenia przez 10.</Hint>
+<Hint>Setki: `liczba / 100`. Dziesiątki: najpierw odetnij jedności (`/ 10`), potem weź ostatnią cyfrę (`% 10`).</Hint>
+<Solution>
+
+```java check="body" expect="5 8 3\nSuma cyfr: 16"
+int liczba = 583;
+int setki = liczba / 100;              // 5
+int dziesiatki = liczba / 10 % 10;     // 58 % 10 = 8
+int jednosci = liczba % 10;            // 3
+System.out.println(setki + " " + dziesiatki + " " + jednosci);
+System.out.println("Suma cyfr: " + (setki + dziesiatki + jednosci));
+```
+
+**Dlaczego tak:** `/` i `%` mają ten sam priorytet i liczą się od lewej, więc `liczba / 10 % 10` to `(583 / 10) % 10`. Nawias wokół sumy jest konieczny, bo inaczej cyfry by się skleiły w tekst.
+</Solution>
+</Task>
+
+<Task id="j1-3-2" title="Rok przestępny" level="średnie" minutes={10}>
+Rok jest przestępny, jeśli dzieli się przez 4 i nie dzieli się przez 100, **albo** dzieli się przez 400. Zapisz to jednym wyrażeniem w zmiennej `boolean czyPrzestepny` i sprawdź lata 2024, 1900, 2000 i 2027. Prawidłowe odpowiedzi: true, false, true, false.
+
+<Hint>„Dzieli się przez 4” to `rok % 4 == 0`. „Nie dzieli się przez 100” to `rok % 100 != 0`.</Hint>
+<Hint>Pierwsza para warunków łączy się przez `&&` i bierzesz ją w nawias. Potem `||` i trzeci warunek.</Hint>
+<Solution>
+
+```java check="body" expect="2024: true\n1900: false\n2000: true\n2027: false"
+int rok = 2024;
+boolean czyPrzestepny = (rok % 4 == 0 && rok % 100 != 0) || rok % 400 == 0;
+System.out.println(rok + ": " + czyPrzestepny);
+
+rok = 1900;
+czyPrzestepny = (rok % 4 == 0 && rok % 100 != 0) || rok % 400 == 0;
+System.out.println(rok + ": " + czyPrzestepny);
+
+rok = 2000;
+czyPrzestepny = (rok % 4 == 0 && rok % 100 != 0) || rok % 400 == 0;
+System.out.println(rok + ": " + czyPrzestepny);
+
+rok = 2027;
+czyPrzestepny = (rok % 4 == 0 && rok % 100 != 0) || rok % 400 == 0;
+System.out.println(rok + ": " + czyPrzestepny);
+```
+
+**Dlaczego tak:** 1900 dzieli się przez 4, ale też przez 100, a nie przez 400, więc nie jest przestępny. Czterokrotne powtórzenie tej samej linii aż prosi się o metodę. Zrobisz to w lekcji 1.8.
+</Solution>
+</Task>
+
+<Task id="j1-3-3" title="Co wypisze?" level="średnie" minutes={5}>
+Najpierw odpowiedz **na kartce**, potem sprawdź w IntelliJ.
+
+```java check="body"
+int x = 10;
+x += 3;
+x = x % 4;
+int y = x++ * 2;
+System.out.println(x + " " + y);
+```
+
+<Hint>Policz po kolei: 10 + 3, a potem reszta z dzielenia przez 4.</Hint>
+<Hint>Po trzeciej linii x = 1. Przy `x++` do mnożenia idzie STARA wartość.</Hint>
+<Solution>
+Wynik: `2 2`.
+
+- `x += 3` daje 13,
+- `13 % 4` daje 1,
+- `x++ * 2`: do mnożenia idzie 1, więc y = 2, a potem x rośnie do 2.
+</Solution>
+</Task>
+
+<Task id="j1-3-4" title="Wydawanie reszty" level="egzamin" minutes={15}>
+Automat ma wydać `int kwota = 87;` zł, używając jak najmniejszej liczby nominałów 50, 20, 10, 5, 2 i 1. Wypisz, ile sztuk każdego nominału wyda. Bez pętli: tylko `/` i `%`. Oczekiwany wynik:
+
+```text
+50 zł: 1
+20 zł: 1
+10 zł: 1
+5 zł: 1
+2 zł: 1
+1 zł: 0
+```
+
+<Hint>Ile pełnych pięćdziesiątek mieści się w 87? A ile zostaje?</Hint>
+<Hint>Dla każdego nominału: `ile = kwota / nominal;` a potem `kwota = kwota % nominal;`.</Hint>
+<Hint>Możesz użyć `kwota %= 50;` jako skrótu.</Hint>
+<Solution>
+
+```java check="body" expect="50 zł: 1\n20 zł: 1\n10 zł: 1\n5 zł: 1\n2 zł: 1\n1 zł: 0"
+int kwota = 87;
+System.out.println("50 zł: " + kwota / 50);
+kwota %= 50;                                   // zostaje 37
+System.out.println("20 zł: " + kwota / 20);
+kwota %= 20;                                   // 17
+System.out.println("10 zł: " + kwota / 10);
+kwota %= 10;                                   // 7
+System.out.println("5 zł: " + kwota / 5);
+kwota %= 5;                                    // 2
+System.out.println("2 zł: " + kwota / 2);
+kwota %= 2;                                    // 0
+System.out.println("1 zł: " + kwota);
+```
+
+**Dlaczego tak:** to tzw. algorytm zachłanny. Zawsze bierzesz największy nominał, ile się da, i resztą zajmujesz się dalej. Gdy poznasz tablice i pętle (1.6–1.7), zapiszesz to w czterech linijkach.
+</Solution>
+</Task>
