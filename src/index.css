@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   --bg: #f6f5f1;
@@ -19,11 +18,36 @@
   --bad: #b91c1c;
   --bad-soft: #fbe3e3;
   --code-bg: #fbfaf7;
+  --on-status: #ffffff;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 2px 8px rgb(0 0 0 / 0.04);
   color-scheme: light;
 }
 
-.dark {
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111214;
+    --surface: #191a1e;
+    --surface-2: #22232a;
+    --ink: #ececf1;
+    --muted: #a1a1ad;
+    --line: #2e2f37;
+    --accent: #a5b4fc;
+    --accent-ink: #14152a;
+    --accent-soft: #262a4d;
+    --good: #4ade80;
+    --good-soft: #15301f;
+    --warn: #fbbf24;
+    --warn-soft: #3a2c10;
+    --bad: #f87171;
+    --bad-soft: #3d1a1a;
+    --code-bg: #15161a;
+    --on-status: #111214;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
   --bg: #111214;
   --surface: #191a1e;
   --surface-2: #22232a;
@@ -40,6 +64,7 @@
   --bad: #f87171;
   --bad-soft: #3d1a1a;
   --code-bg: #15161a;
+  --on-status: #111214;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
   color-scheme: dark;
 }
@@ -60,6 +85,7 @@
   --color-warn-soft: var(--warn-soft);
   --color-bad: var(--bad);
   --color-bad-soft: var(--bad-soft);
+  --color-on-status: var(--on-status);
   --font-sans: "Atkinson Hyperlegible Next", "Segoe UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
@@ -177,8 +203,14 @@ button {
 .shiki span {
   color: var(--shiki-light);
 }
-.dark .shiki,
-.dark .shiki span {
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .shiki,
+  :root:not([data-theme="light"]) .shiki span {
+    color: var(--shiki-dark);
+  }
+}
+:root[data-theme="dark"] .shiki,
+:root[data-theme="dark"] .shiki span {
   color: var(--shiki-dark);
 }
 .codeblock pre {

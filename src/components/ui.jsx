@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { STATUSES, STATUS_LABEL, useProgress } from '../lib/progress'
 
@@ -85,9 +86,9 @@ export function Button({ as: As = 'button', variant = 'primary', className = '',
   const v = {
     primary: 'bg-accent text-accent-ink hover:opacity-90',
     ghost: 'border border-line bg-surface hover:bg-surface-2',
-    good: 'bg-good text-white dark:text-[#0b1a10]',
-    warn: 'bg-warn text-white dark:text-[#20170a]',
-    bad: 'bg-bad text-white dark:text-[#200b0b]',
+    good: 'bg-good text-on-status',
+    warn: 'bg-warn text-on-status',
+    bad: 'bg-bad text-on-status',
   }[variant]
   return (
     <As
@@ -114,4 +115,29 @@ export function shuffle(arr) {
     ;[a[i], a[j]] = [a[j], a[i]]
   }
   return a
+}
+
+/** Przycisk z potwierdzeniem w dwóch krokach (zamiast okna confirm). */
+export function ConfirmButton({ onConfirm, children, confirmText = 'Na pewno? Kliknij jeszcze raz', variant = 'ghost', className = '', ...rest }) {
+  const [armed, setArmed] = useState(false)
+  useEffect(() => {
+    if (!armed) return
+    const t = setTimeout(() => setArmed(false), 4000)
+    return () => clearTimeout(t)
+  }, [armed])
+  return (
+    <Button
+      {...rest}
+      variant={armed ? 'bad' : variant}
+      className={className}
+      onClick={() => {
+        if (armed) {
+          setArmed(false)
+          onConfirm()
+        } else setArmed(true)
+      }}
+    >
+      {armed ? confirmText : children}
+    </Button>
+  )
 }

@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { HashRouter, Route, Routes } from 'react-router-dom'
+import { HashRouter, MemoryRouter, Route, Routes } from 'react-router-dom'
 import './index.css'
 import { ProgressProvider } from './lib/progress'
 import Layout from './components/Layout'
@@ -17,10 +17,13 @@ import Progress from './pages/Progress'
 import About from './pages/About'
 import More from './pages/More'
 
+// Podgląd w jednym pliku (np. jako artefakt) używa routera w pamięci; normalna strona: adresy z #
+const Router = import.meta.env.VITE_MEMORY_ROUTER ? MemoryRouter : HashRouter
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ProgressProvider>
-      <HashRouter>
+      <Router>
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<Home />} />
@@ -40,7 +43,7 @@ createRoot(document.getElementById('root')).render(
             <Route path="*" element={<Home />} />
           </Route>
         </Routes>
-      </HashRouter>
+      </Router>
     </ProgressProvider>
   </StrictMode>,
 )

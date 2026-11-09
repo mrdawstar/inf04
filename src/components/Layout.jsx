@@ -4,12 +4,24 @@ import Icon from './Icon'
 import { SECTIONS } from '../data/roadmap'
 import { sectionProgress, useProgress } from '../lib/progress'
 
+function isDarkNow() {
+  const t = document.documentElement.getAttribute('data-theme')
+  if (t) return t === 'dark'
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false
+}
+
 function useTheme() {
-  const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
+  const [dark, setDark] = useState(isDarkNow)
+  useEffect(() => {
+    const mq = window.matchMedia?.('(prefers-color-scheme: dark)')
+    const on = () => setDark(isDarkNow())
+    mq?.addEventListener?.('change', on)
+    return () => mq?.removeEventListener?.('change', on)
+  }, [])
   const toggle = () => {
     const next = !dark
     setDark(next)
-    document.documentElement.classList.toggle('dark', next)
+    document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light')
     try {
       localStorage.setItem('inf04-theme', next ? 'dark' : 'light')
     } catch {

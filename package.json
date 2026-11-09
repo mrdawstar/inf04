@@ -7,7 +7,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "check:java": "node scripts/check-java.mjs",
-    "build:single": "SINGLE=1 vite build --outDir dist-single"
+    "build:single": "SINGLE=1 VITE_MEMORY_ROUTER=1 vite build --outDir dist-single"
   },
   "keywords": [],
   "author": "",

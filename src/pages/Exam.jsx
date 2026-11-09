@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { COMMON_CHECKLIST, EXAMS } from '../data/exams'
 import { useProgress } from '../lib/progress'
-import { Button, PageTitle, ProgressBar, fmtTime } from '../components/ui'
+import { Button, ConfirmButton, PageTitle, ProgressBar, fmtTime } from '../components/ui'
 import RichText from '../components/RichText'
 import Icon from '../components/Icon'
 
@@ -95,9 +95,7 @@ export function ExamPractical() {
 
   const start = () => setExam(id, { running: true, startedAt: Date.now() })
   const pause = () => setExam(id, { running: false, elapsed: elapsed })
-  const reset = () => {
-    if (confirm('Wyzerować czas i checklistę tego arkusza?')) setExam(id, { running: false, elapsed: 0, startedAt: null, checks: {} })
-  }
+  const reset = () => setExam(id, { running: false, elapsed: 0, startedAt: null, checks: {} })
   const toggle = (k) => setExam(id, { checks: { ...(st.checks || {}), [k]: !st.checks?.[k] } })
 
   const groups = [COMMON_CHECKLIST, ...exam.checklist]
@@ -125,9 +123,9 @@ export function ExamPractical() {
               <Icon name="play" /> {elapsed > 0 ? 'Wznów' : 'Start'}
             </Button>
           )}
-          <button type="button" onClick={reset} className="grid size-12 place-items-center rounded-xl border border-line" aria-label="Zeruj">
+          <ConfirmButton onConfirm={reset} confirmText="Zerować?" className="px-3" aria-label="Zeruj czas i checklistę">
             <Icon name="reset" />
-          </button>
+          </ConfirmButton>
         </div>
         <div className="relative mt-3">
           <ProgressBar pct={Math.min(100, (elapsedMin / exam.minutes) * 100)} />

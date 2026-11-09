@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { ALL_QUIZ } from '../lib/content'
 import { THEORY } from '../data/theory'
 import { useProgress } from '../lib/progress'
-import { Button, PageTitle, fmtTime, shuffle } from '../components/ui'
+import { Button, ConfirmButton, PageTitle, fmtTime, shuffle } from '../components/ui'
 import Question from '../components/Question'
 import Icon from '../components/Icon'
 
@@ -135,9 +135,9 @@ export default function TheoryTest() {
             Następne <Icon name="next" />
           </Button>
         ) : (
-          <Button variant="good" onClick={() => confirm('Zakończyć test?') && finish()}>
+          <ConfirmButton variant="good" onConfirm={finish} confirmText="Na pewno zakończyć?">
             Zakończ
-          </Button>
+          </ConfirmButton>
         )}
       </div>
 
@@ -153,9 +153,9 @@ export default function TheoryTest() {
           </button>
         ))}
       </div>
-      <Button variant="ghost" className="mt-4 w-full" onClick={() => confirm(`Odpowiedziałeś na ${answeredCount} z ${run.items.length}. Zakończyć?`) && finish()}>
+      <ConfirmButton className="mt-4 w-full" onConfirm={finish} confirmText={`Masz ${answeredCount}/${run.items.length} odpowiedzi. Kliknij, by zakończyć`}>
         Zakończ test teraz
-      </Button>
+      </ConfirmButton>
     </div>
   )
 }
